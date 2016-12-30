@@ -1,0 +1,92 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'net.saliman:gradle-cobertura-plugin:2.4.0'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
+
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    }
+}
+
+apply plugin: 'groovy'
+
+apply plugin: 'jacoco'
+apply plugin: 'net.saliman.cobertura'
+apply plugin: 'com.github.kt3k.coveralls'
+
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+apply plugin: 'com.jfrog.bintray'
+
+apply plugin: 'idea'
+
+group = 'de.gesellix'
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy:2.4.7'
+    compile 'org.codehaus.groovy:groovy-json:2.4.7'
+
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    testCompile 'ch.qos.logback:logback-classic:1.1.8'
+
+    compile 'com.squareup.okio:okio:1.11.0'
+    compile 'com.squareup.okhttp3:okhttp:3.5.0'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.5.0'
+
+    compile 'org.apache.commons:commons-compress:1.13'
+
+    compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
+        exclude module: 'log4j'
+    }
+    compile('com.kohlschutter.junixsocket:junixsocket-common:2.0.4') {
+        exclude module: 'log4j'
+    }
+
+    compile 'org.bouncycastle:bcpkix-jdk15on:1.56'
+
+    testCompile project(':testutil')
+
+    testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude module: 'groovy-all'
+    }
+    testCompile 'cglib:cglib-nodep:3.2.4'
+
+    testCompile 'commons-lang:commons-lang:2.6'
+}
+
+task sourcesJar(type: Jar) {
+    dependsOn classes
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+test {
+    // minimal way of providing a special environment variable for the EnvFileParserTest
+    environment "A_KNOWN_VARIABLE", "my value"
+}
+
+cobertura {
+    coverageSourceDirs = sourceSets.main.groovy.srcDirs
+    coverageFormats = ['html', 'xml']
+}
+
+jacocoTestReport.reports {
+    xml.enabled = true
+    html.enabled = true
+}
+
+artifacts {
+    archives sourcesJar
+}
