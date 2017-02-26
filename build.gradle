@@ -55,7 +55,7 @@ dependencies {
   compile 'org.codehaus.groovy:groovy-json:2.4.8'
 
   compile 'org.slf4j:slf4j-api:1.7.22'
-  testCompile 'ch.qos.logback:logback-classic:1.1.9'
+  testCompile 'ch.qos.logback:logback-classic:1.1.10'
 
   compile 'com.squareup.okio:okio:1.11.0'
   compile 'com.squareup.okhttp3:okhttp:3.6.0'
@@ -122,6 +122,6 @@ bintray {
 bintrayUpload.dependsOn build
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '3.2.1'
+  gradleVersion = '3.4'
   distributionType = Wrapper.DistributionType.ALL
 }
