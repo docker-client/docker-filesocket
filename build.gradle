@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+    classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
     classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
   }
 }
@@ -51,11 +51,11 @@ repositories {
 }
 
 dependencies {
-  compile 'org.codehaus.groovy:groovy:2.4.8'
-  compile 'org.codehaus.groovy:groovy-json:2.4.8'
+  compile 'org.codehaus.groovy:groovy:2.4.10'
+  compile 'org.codehaus.groovy:groovy-json:2.4.10'
 
-  compile 'org.slf4j:slf4j-api:1.7.22'
-  testCompile 'ch.qos.logback:logback-classic:1.1.10'
+  compile 'org.slf4j:slf4j-api:1.7.25'
+  testCompile 'ch.qos.logback:logback-classic:1.2.3'
 
   compile 'com.squareup.okio:okio:1.11.0'
   compile 'com.squareup.okhttp3:okhttp:3.6.0'
@@ -75,7 +75,7 @@ dependencies {
   testCompile('org.spockframework:spock-core:1.0-groovy-2.4') {
     exclude module: 'groovy-all'
   }
-  testCompile 'cglib:cglib-nodep:3.2.4'
+  testCompile 'cglib:cglib-nodep:3.2.5'
 
   testCompile 'commons-lang:commons-lang:2.6'
 }
@@ -122,6 +122,6 @@ bintray {
 bintrayUpload.dependsOn build
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '3.4'
+  gradleVersion = '3.4.1'
   distributionType = Wrapper.DistributionType.ALL
 }
