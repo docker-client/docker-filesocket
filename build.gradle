@@ -29,6 +29,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
 def dependencyVersions = [
+    'com.squareup.okio:okio:1.12.0',
     'org.bouncycastle:bcprov-jdk15on:1.56',
 ]
 
