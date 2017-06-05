@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.github.ben-manes:gradle-versions-plugin:0.14.0'
+    classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
     classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
   }
 }
@@ -29,8 +29,7 @@ apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
 def dependencyVersions = [
-    'com.squareup.okio:okio:1.12.0',
-    'org.bouncycastle:bcprov-jdk15on:1.56',
+    'org.bouncycastle:bcprov-jdk15on:1.57',
 ]
 
 configurations.all {
@@ -71,7 +70,7 @@ dependencies {
     exclude module: 'log4j'
   }
 
-  compile 'org.bouncycastle:bcpkix-jdk15on:1.56'
+  compile 'org.bouncycastle:bcpkix-jdk15on:1.57'
 
   testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
     exclude module: 'groovy-all'
