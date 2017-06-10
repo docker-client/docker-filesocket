@@ -1,127 +1,156 @@
 import java.text.SimpleDateFormat
 
 buildscript {
-  repositories {
-    mavenLocal()
-    jcenter()
-    mavenCentral()
-  }
+    ext {
+        kotlin_version = '1.1.2'
+    }
 
-  dependencies {
-    classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
-    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-  }
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-M4'
+    }
 }
 
 plugins {
-  id 'com.gradle.build-scan' version '1.0'
+    id 'com.gradle.build-scan' version '1.0'
 }
 
+apply plugin: 'org.junit.platform.gradle.plugin'
+
 ext {
-  artifactVersion = new SimpleDateFormat('yyyy-MM-dd\'T\'HH-mm-ss').format(new Date())
-  bintrayDryRun = false
+    artifactVersion = new SimpleDateFormat('yyyy-MM-dd\'T\'HH-mm-ss').format(new Date())
+    bintrayDryRun = false
 }
 
 
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'groovy'
+apply plugin: 'kotlin'
 apply plugin: 'maven-publish'
 
 def dependencyVersions = [
-    'org.bouncycastle:bcprov-jdk15on:1.57',
+        "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
+        'org.slf4j:slf4j-api:1.7.25',
 ]
 
 configurations.all {
-  resolutionStrategy {
-    failOnVersionConflict()
-    force dependencyVersions
-  }
+    resolutionStrategy {
+        failOnVersionConflict()
+        force dependencyVersions
+    }
 }
 
 buildScan {
-  licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-  licenseAgree = 'yes'
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
 }
 
 repositories {
-  mavenLocal()
-  jcenter()
-  mavenCentral()
+    mavenLocal()
+    jcenter()
+    maven { url "http://dl.bintray.com/jetbrains/spek" }
+    mavenCentral()
 }
 
 dependencies {
-  compile 'org.codehaus.groovy:groovy:2.4.10'
-  compile 'org.codehaus.groovy:groovy-json:2.4.10'
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 
-  compile 'org.slf4j:slf4j-api:1.7.25'
-  testCompile 'ch.qos.logback:logback-classic:1.2.3'
+    compile 'io.github.microutils:kotlin-logging:1.4.4'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    testCompile 'ch.qos.logback:logback-classic:1.2.3'
 
-  compile 'com.squareup.okio:okio:1.13.0'
-  compile 'com.squareup.okhttp3:okhttp:3.8.0'
-  testCompile 'com.squareup.okhttp3:mockwebserver:3.8.0'
+    compile 'com.squareup.okio:okio:1.13.0'
+    compile 'com.squareup.okhttp3:okhttp:3.8.0'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.8.0'
 
-  compile 'org.apache.commons:commons-compress:1.14'
+    compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
+        exclude module: 'log4j'
+    }
+    compile('com.kohlschutter.junixsocket:junixsocket-common:2.0.4') {
+        exclude module: 'log4j'
+    }
 
-  compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
-    exclude module: 'log4j'
-  }
-  compile('com.kohlschutter.junixsocket:junixsocket-common:2.0.4') {
-    exclude module: 'log4j'
-  }
+    testCompile "org.jetbrains.kotlin:kotlin-test"
+    testCompile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    testCompile("org.jetbrains.spek:spek-api:$kotlin_version") {
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    testRuntime("org.jetbrains.spek:spek-junit-platform-engine:$kotlin_version") {
+        exclude group: 'org.junit.platform'
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    testRuntime "org.junit.platform:junit-platform-launcher:1.0.0-M4"
+}
 
-  compile 'org.bouncycastle:bcpkix-jdk15on:1.57'
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
 
-  testCompile('org.spockframework:spock-core:1.1-groovy-2.4') {
-    exclude module: 'groovy-all'
-  }
-  testCompile 'cglib:cglib-nodep:3.2.5'
-
-  testCompile 'commons-lang:commons-lang:2.6'
+junitPlatform {
+    filters {
+        engines {
+            include 'spek'
+        }
+    }
 }
 
 task sourcesJar(type: Jar) {
-  dependsOn classes
-  classifier 'sources'
-  from sourceSets.main.allSource
+    dependsOn classes
+    classifier 'sources'
+    from sourceSets.main.allSource
 }
 
 artifacts {
-  archives sourcesJar
+    archives sourcesJar
 }
 
 publishing {
-  publications {
-    dockerFilesocket(MavenPublication) {
-      groupId 'de.gesellix'
-      artifactId 'docker-filesocket'
-      version artifactVersion
-      from components.java
-      artifact sourcesJar
+    publications {
+        dockerFilesocket(MavenPublication) {
+            groupId 'de.gesellix'
+            artifactId 'docker-filesocket'
+            version artifactVersion
+            from components.java
+            artifact sourcesJar
+        }
     }
-  }
 }
 
 bintray {
-  user = System.env.BINTRAY_USER ?: project["bintray.user"]
-  key = System.env.BINTRAY_API_KEY ?: project["bintray.key"]
-  publications = ['dockerFilesocket']
-  pkg {
-    repo = 'docker-utils'
-    name = 'docker-filesocket'
-    desc = 'Unix Domain Sockets and Named Pipes for the JVM on Linux, macOS, and Windows'
-    licenses = ['Apache-2.0']
-    labels = ['docker', 'unix socket', 'linux', 'mac', 'named pipe', 'windows', 'engine api', 'remote api', 'client', 'java', 'groovy']
-    version = [
-        name: artifactVersion
-    ]
-    vcsUrl = 'https://github.com/docker-client/docker-filesocket.git'
-  }
-  dryRun = bintrayDryRun
+    user = System.env.BINTRAY_USER ?: project["bintray.user"]
+    key = System.env.BINTRAY_API_KEY ?: project["bintray.key"]
+    publications = ['dockerFilesocket']
+    pkg {
+        repo = 'docker-utils'
+        name = 'docker-filesocket'
+        desc = 'Unix Domain Sockets and Named Pipes for the JVM on Linux, macOS, and Windows'
+        licenses = ['Apache-2.0']
+        labels = ['docker', 'unix socket', 'linux', 'mac', 'named pipe', 'windows', 'engine api', 'remote api', 'client', 'java']
+        version = [
+                name: artifactVersion
+        ]
+        vcsUrl = 'https://github.com/docker-client/docker-filesocket.git'
+    }
+    dryRun = bintrayDryRun
 }
 bintrayUpload.dependsOn build
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '3.5'
-  distributionType = Wrapper.DistributionType.ALL
+    gradleVersion = '3.5'
+    distributionType = Wrapper.DistributionType.ALL
 }
