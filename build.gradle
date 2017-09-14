@@ -2,8 +2,8 @@ import java.text.SimpleDateFormat
 
 buildscript {
     ext {
-        junit_runner_version = '1.0.0-RC3'
-        kotlin_version = '1.1.4-2'
+        junit_platform_version = '1.0.0-RC3'
+        kotlin_version = '1.1.4-3'
         spek_version = '1.1.4'
     }
 
@@ -17,7 +17,7 @@ buildscript {
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_runner_version"
+        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_platform_version"
     }
 }
 
@@ -69,8 +69,8 @@ dependencies {
     testCompile 'ch.qos.logback:logback-classic:1.2.3'
 
     compile 'com.squareup.okio:okio:1.13.0'
-    compile 'com.squareup.okhttp3:okhttp:3.8.1'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.8.1'
+    compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.0'
 
     compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
         exclude module: 'log4j'
@@ -84,9 +84,9 @@ dependencies {
     testCompile "org.jetbrains.spek:spek-api:$spek_version"
     testRuntime "org.jetbrains.spek:spek-junit-platform-engine:$spek_version"
 //    testRuntime "org.junit.jupiter:junit-jupiter-api:5.0.0-M4"
-//    testRuntime "org.junit.platform:junit-platform-runner:$junit_runner_version"
-    testRuntime "org.junit.platform:junit-platform-launcher:$junit_runner_version"
-//    testRuntime "org.junit.platform:junit-platform-console:$junit_runner_version"
+//    testRuntime "org.junit.platform:junit-platform-runner:$junit_platform_version"
+    testRuntime "org.junit.platform:junit-platform-launcher:$junit_platform_version"
+//    testRuntime "org.junit.platform:junit-platform-console:$junit_platform_version"
 }
 
 compileKotlin {
@@ -101,7 +101,7 @@ compileTestKotlin {
 }
 
 junitPlatform {
-//    platformVersion junit_runner_version
+//    platformVersion junit_platform_version
     filters {
         engines {
             include 'spek'
