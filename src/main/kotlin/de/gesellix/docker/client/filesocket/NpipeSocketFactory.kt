@@ -5,7 +5,5 @@ import java.net.Socket
 class NpipeSocketFactory : FileSocketFactory() {
 
     @Override
-    override fun createSocket(): Socket {
-        return NamedPipeSocket()
-    }
+    override fun createSocket(): Socket = NamedPipeSocket()
 }

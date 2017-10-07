@@ -9,8 +9,8 @@ private val log = KotlinLogging.logger {}
 
 class NamedPipeSocket : FileSocket() {
 
-    var namedPipe: RandomAccessFile? = null
-    var closed: Boolean = false
+    private var namedPipe: RandomAccessFile? = null
+    private var closed: Boolean = false
 
     @Override
     override fun connect(endpoint: SocketAddress, timeout: Int) {
@@ -27,19 +27,13 @@ class NamedPipeSocket : FileSocket() {
     }
 
     @Override
-    override fun getInputStream(): InputStream? {
-        return if (namedPipe != null) FileInputStream(namedPipe!!.getFD()) else null
-    }
+    override fun getInputStream(): InputStream? = if (namedPipe != null) FileInputStream(namedPipe!!.getFD()) else null
 
     @Override
-    override fun getOutputStream(): OutputStream? {
-        return if (namedPipe != null) FileOutputStream(namedPipe!!.getFD()) else null
-    }
+    override fun getOutputStream(): OutputStream? = if (namedPipe != null) FileOutputStream(namedPipe!!.getFD()) else null
 
     @Override
-    override fun isClosed(): Boolean {
-        return closed
-    }
+    override fun isClosed(): Boolean = closed
 
     @Override
     override fun close() {

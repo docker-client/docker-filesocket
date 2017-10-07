@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
 
 class UnixSocket : FileSocket() {
 
-    var socket: AFUNIXSocket? = null
+    private var socket: AFUNIXSocket? = null
 
     @Override
     override fun connect(endpoint: SocketAddress, timeout: Int) {
@@ -38,14 +38,10 @@ class UnixSocket : FileSocket() {
     }
 
     @Override
-    override fun getInputStream(): InputStream? {
-        return socket?.inputStream
-    }
+    override fun getInputStream(): InputStream? = socket?.inputStream
 
     @Override
-    override fun getOutputStream(): OutputStream? {
-        return socket?.outputStream
-    }
+    override fun getOutputStream(): OutputStream? = socket?.outputStream
 
     @Override
     override fun bind(bindpoint: SocketAddress) {
@@ -53,9 +49,7 @@ class UnixSocket : FileSocket() {
     }
 
     @Override
-    override fun isConnected(): Boolean {
-        return if (socket != null) socket!!.isConnected else false
-    }
+    override fun isConnected(): Boolean = if (socket != null) socket!!.isConnected else false
 
     @Override
     override fun close() {

@@ -9,9 +9,7 @@ abstract class FileSocket : Socket() {
         const val SOCKET_MARKER: String = ".socket"
     }
 
-    fun encodeHostname(hostname: String): String {
-        return "${HostnameEncoder().encode(hostname)}${SOCKET_MARKER}"
-    }
+    fun encodeHostname(hostname: String): String = "${HostnameEncoder().encode(hostname)}$SOCKET_MARKER"
 
     fun decodeHostname(address: InetAddress): String {
         val hostName = address.hostName
