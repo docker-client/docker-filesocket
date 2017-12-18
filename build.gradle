@@ -2,8 +2,8 @@ import java.text.SimpleDateFormat
 
 buildscript {
     ext {
-        junit_platform_version = '1.0.1'
-        kotlin_version = '1.1.51'
+        junit_platform_version = '1.0.2'
+        kotlin_version = '1.2.10'
         spek_version = '1.1.5'
     }
 
@@ -14,15 +14,15 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_platform_version"
     }
 }
 
 plugins {
-    id 'com.gradle.build-scan' version '1.8'
+    id 'com.gradle.build-scan' version '1.11'
 }
 
 ext {
@@ -39,7 +39,6 @@ apply plugin: 'maven-publish'
 def dependencyVersions = [
         "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
         "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version",
-        'org.slf4j:slf4j-api:1.7.25',
 ]
 
 configurations.all {
@@ -64,13 +63,13 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 
-    compile 'io.github.microutils:kotlin-logging:1.4.6'
+    compile 'io.github.microutils:kotlin-logging:1.4.8'
     compile 'org.slf4j:slf4j-api:1.7.25'
     testCompile 'ch.qos.logback:logback-classic:1.2.3'
 
     compile 'com.squareup.okio:okio:1.13.0'
-    compile 'com.squareup.okhttp3:okhttp:3.9.0'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.0'
+    compile 'com.squareup.okhttp3:okhttp:3.9.1'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.1'
 
     compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
         exclude module: 'log4j'
@@ -151,6 +150,6 @@ bintray {
 bintrayUpload.dependsOn build
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.2.1'
+    gradleVersion = '4.4'
     distributionType = Wrapper.DistributionType.ALL
 }
