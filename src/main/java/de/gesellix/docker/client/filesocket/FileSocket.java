@@ -3,7 +3,7 @@ package de.gesellix.docker.client.filesocket;
 import java.net.InetAddress;
 import java.net.Socket;
 
-abstract class FileSocket extends Socket {
+public abstract class FileSocket extends Socket {
 
     public final static String SOCKET_MARKER = ".socket";
 

@@ -5,7 +5,7 @@ import okio.ByteString;
 import java.util.ArrayList;
 import java.util.List;
 
-class HostnameEncoder {
+public class HostnameEncoder {
 
     /**
      * @see java.net.IDN
@@ -13,7 +13,7 @@ class HostnameEncoder {
     private final static Integer MAX_LABEL_LENGTH = 63;
     private final static Integer MAX_HOSTNAME_LENGTH = MAX_LABEL_LENGTH * 4;
 
-    String encode(String toEncode) {
+    public String encode(String toEncode) {
         String encoded = ByteString.encodeUtf8(toEncode).hex();
         if (encoded.length() > MAX_LABEL_LENGTH && encoded.length() < MAX_HOSTNAME_LENGTH) {
             List<String> labels = new ArrayList<>();
@@ -28,7 +28,7 @@ class HostnameEncoder {
         return encoded;
     }
 
-    String decode(String toDecode) {
+    public String decode(String toDecode) {
         String decoded = toDecode;
         if (toDecode.contains(".")) {
             String[] labels = toDecode.split("\\.");

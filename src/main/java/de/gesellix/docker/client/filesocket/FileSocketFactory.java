@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
-abstract class FileSocketFactory extends SocketFactory implements Dns {
+public abstract class FileSocketFactory extends SocketFactory implements Dns {
 
     @Override
     public List<InetAddress> lookup(String hostname) throws UnknownHostException {

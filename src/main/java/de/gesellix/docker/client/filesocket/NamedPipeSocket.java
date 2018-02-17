@@ -14,7 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
-class NamedPipeSocket extends FileSocket {
+public class NamedPipeSocket extends FileSocket {
 
     private static final Logger log = LoggerFactory.getLogger(NamedPipeSocket.class);
 

@@ -14,7 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
-class UnixSocket extends FileSocket {
+public class UnixSocket extends FileSocket {
 
     private static final Logger log = LoggerFactory.getLogger(UnixSocket.class);
 
