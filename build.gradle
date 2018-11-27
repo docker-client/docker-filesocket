@@ -1,10 +1,6 @@
 import java.text.SimpleDateFormat
 
 buildscript {
-    ext {
-        junit_platform_version = '1.0.3'
-    }
-
     repositories {
         mavenLocal()
         jcenter()
@@ -12,14 +8,12 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
-        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_platform_version"
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
     }
 }
 
 plugins {
-    id 'com.gradle.build-scan' version '1.12.1'
 }
 
 ext {
@@ -31,10 +25,9 @@ apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'org.junit.platform.gradle.plugin'
 
 def dependencyVersions = [
-        "com.squareup.okio:okio:1.14.0",
+        "com.squareup.okio:okio:2.1.0",
 ]
 
 configurations.all {
@@ -42,11 +35,6 @@ configurations.all {
         failOnVersionConflict()
         force dependencyVersions
     }
-}
-
-buildScan {
-    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-    licenseAgree = 'yes'
 }
 
 repositories {
@@ -60,9 +48,9 @@ dependencies {
     testRuntime 'org.slf4j:jul-to-slf4j:1.7.25'
     testRuntime 'ch.qos.logback:logback-classic:1.2.3'
 
-    compile 'com.squareup.okio:okio:1.14.0'
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.1'
+    compile 'com.squareup.okio:okio:2.1.0'
+    compile 'com.squareup.okhttp3:okhttp:3.12.0'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.12.0'
 
     compile('com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4') {
         exclude module: 'log4j'
@@ -71,17 +59,17 @@ dependencies {
         exclude module: 'log4j'
     }
 
-    testRuntime "org.junit.platform:junit-platform-launcher:$junit_platform_version"
-    testCompile "org.junit.jupiter:junit-jupiter-api:5.0.3"
-    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.0.3"
+    testRuntime "org.junit.platform:junit-platform-launcher:1.3.2"
+    testCompile "org.junit.jupiter:junit-jupiter-api:5.3.2"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.3.2"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-//junitPlatform {
-//    enableStandardTestTask true
-//}
+test {
+    useJUnitPlatform()
+}
 
 task sourcesJar(type: Jar) {
     dependsOn classes
@@ -124,7 +112,7 @@ bintray {
 }
 bintrayUpload.dependsOn build
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.5.1'
+task updateWrapper(type: Wrapper) {
+    gradleVersion = '4.10.2'
     distributionType = Wrapper.DistributionType.ALL
 }
