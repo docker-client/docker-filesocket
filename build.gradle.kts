@@ -46,8 +46,8 @@ dependencies {
     compile("com.squareup.okhttp3:okhttp:3.12.1")
     testCompile("com.squareup.okhttp3:mockwebserver:3.12.1")
 
-    compile("com.kohlschutter.junixsocket:junixsocket-native-common:2.1.1")
-    compile("com.kohlschutter.junixsocket:junixsocket-common:2.1.1")
+    compile("com.kohlschutter.junixsocket:junixsocket-native-common:2.1.2")
+    compile("com.kohlschutter.junixsocket:junixsocket-common:2.1.2")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.3.2")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.2")
