@@ -21,7 +21,9 @@ rootProject.extra.set("artifactVersion", SimpleDateFormat("yyyy-MM-dd\'T\'HH-mm-
 rootProject.extra.set("bintrayDryRun", false)
 
 val dependencyVersions = listOf(
-        "com.squareup.okio:okio:2.1.0"
+        "com.squareup.okio:okio:2.2.2",
+        // work around https://github.com/kohlschutter/junixsocket/issues/59
+        "com.kohlschutter.junixsocket:junixsocket-native-common:2.1.1"
 )
 
 configurations.all {
@@ -42,16 +44,16 @@ dependencies {
     testRuntime("org.slf4j:jul-to-slf4j:1.7.25")
     testRuntime("ch.qos.logback:logback-classic:1.2.3")
 
-    compile("com.squareup.okio:okio:2.1.0")
-    compile("com.squareup.okhttp3:okhttp:3.12.1")
-    testCompile("com.squareup.okhttp3:mockwebserver:3.12.1")
+    compile("com.squareup.okio:okio:2.2.2")
+    compile("com.squareup.okhttp3:okhttp:3.13.1")
+    testCompile("com.squareup.okhttp3:mockwebserver:3.13.1")
 
-    compile("com.kohlschutter.junixsocket:junixsocket-native-common:2.1.2")
+    compile("com.kohlschutter.junixsocket:junixsocket-core:2.1.2")
     compile("com.kohlschutter.junixsocket:junixsocket-common:2.1.2")
 
-    testCompile("org.junit.jupiter:junit-jupiter-api:5.3.2")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.2")
-    testRuntime("org.junit.platform:junit-platform-launcher:1.3.2")
+    testCompile("org.junit.jupiter:junit-jupiter-api:5.4.0")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
+    testRuntime("org.junit.platform:junit-platform-launcher:1.4.0")
 }
 
 java {
@@ -69,14 +71,14 @@ tasks {
     }
 
     register<Wrapper>("updateWrapper") {
-        gradleVersion = "5.0"
+        gradleVersion = "5.2.1"
         distributionType = Wrapper.DistributionType.ALL
     }
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
     dependsOn("classes")
-    classifier = "sources"
+    archiveClassifier.set("sources")
     from(sourceSets.main.get().allSource)
 }
 
