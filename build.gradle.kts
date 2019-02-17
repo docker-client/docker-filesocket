@@ -21,9 +21,7 @@ rootProject.extra.set("artifactVersion", SimpleDateFormat("yyyy-MM-dd\'T\'HH-mm-
 rootProject.extra.set("bintrayDryRun", false)
 
 val dependencyVersions = listOf(
-        "com.squareup.okio:okio:2.2.2",
-        // work around https://github.com/kohlschutter/junixsocket/issues/59
-        "com.kohlschutter.junixsocket:junixsocket-native-common:2.1.1"
+        "com.squareup.okio:okio:2.2.2"
 )
 
 configurations.all {
@@ -48,8 +46,8 @@ dependencies {
     compile("com.squareup.okhttp3:okhttp:3.13.1")
     testCompile("com.squareup.okhttp3:mockwebserver:3.13.1")
 
-    compile("com.kohlschutter.junixsocket:junixsocket-core:2.1.2")
-    compile("com.kohlschutter.junixsocket:junixsocket-common:2.1.2")
+    compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.0")
+    compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.0")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.4.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
@@ -84,6 +82,18 @@ val sourcesJar by tasks.registering(Jar::class) {
 
 artifacts {
     add("archives", sourcesJar.get())
+}
+
+fun MavenPom.addDependencies() = withXml {
+    asNode().appendNode("dependencies").let { depNode ->
+        configurations.compile.get().allDependencies.forEach {
+            depNode.appendNode("dependency").apply {
+                appendNode("groupId", it.group)
+                appendNode("artifactId", it.name)
+                appendNode("version", it.version)
+            }
+        }
+    }
 }
 
 val publicationName = "dockerFilesocket"
