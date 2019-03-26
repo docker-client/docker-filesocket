@@ -13,7 +13,7 @@ buildscript {
 plugins {
     java
     `maven-publish`
-    id("com.github.ben-manes.versions") version "0.20.0"
+    id("com.github.ben-manes.versions") version "0.21.0"
     id("com.jfrog.bintray") version "1.8.4"
 }
 
@@ -43,8 +43,8 @@ dependencies {
     testRuntime("ch.qos.logback:logback-classic:1.2.3")
 
     compile("com.squareup.okio:okio:2.2.2")
-    compile("com.squareup.okhttp3:okhttp:3.13.1")
-    testCompile("com.squareup.okhttp3:mockwebserver:3.13.1")
+    compile("com.squareup.okhttp3:okhttp:3.14.0")
+    testCompile("com.squareup.okhttp3:mockwebserver:3.14.0")
 
     compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.0")
     compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.0")
@@ -68,8 +68,8 @@ tasks {
         dependsOn("build")
     }
 
-    register<Wrapper>("updateWrapper") {
-        gradleVersion = "5.2.1"
+    wrapper {
+        gradleVersion = "5.3"
         distributionType = Wrapper.DistributionType.ALL
     }
 }
