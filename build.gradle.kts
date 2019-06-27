@@ -21,7 +21,8 @@ rootProject.extra.set("artifactVersion", SimpleDateFormat("yyyy-MM-dd\'T\'HH-mm-
 rootProject.extra.set("bintrayDryRun", false)
 
 val dependencyVersions = listOf(
-        "com.squareup.okio:okio:2.2.2"
+//        "com.squareup.okio:okio:2.2.2"
+        "org.jetbrains.kotlin:kotlin-stdlib:1.3.40"
 )
 
 configurations.all {
@@ -43,8 +44,7 @@ dependencies {
     testRuntime("ch.qos.logback:logback-classic:1.2.3")
 
     compile("com.squareup.okio:okio:2.2.2")
-    compile("com.squareup.okhttp3:okhttp:3.14.0")
-    testCompile("com.squareup.okhttp3:mockwebserver:3.14.0")
+    compile("com.squareup.okhttp3:okhttp:4.0.0")
 
     compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.0")
     compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.0")
@@ -69,7 +69,7 @@ tasks {
     }
 
     wrapper {
-        gradleVersion = "5.3.1"
+        gradleVersion = "5.4.1"
         distributionType = Wrapper.DistributionType.ALL
     }
 }
