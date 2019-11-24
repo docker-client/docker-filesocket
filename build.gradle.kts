@@ -2,6 +2,9 @@ import com.jfrog.bintray.gradle.BintrayExtension
 import java.text.SimpleDateFormat
 import java.util.*
 
+rootProject.extra.set("artifactVersion", SimpleDateFormat("yyyy-MM-dd\'T\'HH-mm-ss").format(Date()))
+rootProject.extra.set("bintrayDryRun", false)
+
 buildscript {
     repositories {
         mavenLocal()
@@ -13,16 +16,21 @@ buildscript {
 plugins {
     java
     `maven-publish`
-    id("com.github.ben-manes.versions") version "0.21.0"
+    id("com.github.ben-manes.versions") version "0.27.0"
     id("com.jfrog.bintray") version "1.8.4"
+    id("net.ossindex.audit") version "0.4.11"
+    id("io.freefair.github.package-registry-maven-publish") version "4.1.5"
 }
 
-rootProject.extra.set("artifactVersion", SimpleDateFormat("yyyy-MM-dd\'T\'HH-mm-ss").format(Date()))
-rootProject.extra.set("bintrayDryRun", false)
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
 val dependencyVersions = listOf(
-//        "com.squareup.okio:okio:2.2.2"
-        "org.jetbrains.kotlin:kotlin-stdlib:1.3.40"
+        "com.squareup.okio:okio:2.4.1",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.3.60",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.60"
 )
 
 configurations.all {
@@ -43,20 +51,15 @@ dependencies {
     testRuntime("org.slf4j:jul-to-slf4j:1.7.25")
     testRuntime("ch.qos.logback:logback-classic:1.2.3")
 
-    compile("com.squareup.okio:okio:2.2.2")
-    compile("com.squareup.okhttp3:okhttp:4.0.0")
+    compile("com.squareup.okio:okio:2.4.1")
+    compile("com.squareup.okhttp3:okhttp:4.2.2")
 
-    compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.0")
-    compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.0")
+    compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.1")
+    compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.1")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.4.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
     testRuntime("org.junit.platform:junit-platform-launcher:1.4.0")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks {
@@ -104,12 +107,18 @@ publishing {
             artifactId = "docker-filesocket"
             version = rootProject.extra["artifactVersion"] as String
             from(components["java"])
-            artifact(sourcesJar.get())
+//            artifact(sourcesJar.get())
         }
     }
 }
 
 fun findProperty(s: String) = project.findProperty(s) as String?
+
+rootProject.github {
+    slug.set("${project.property("github.package-registry.owner")}/${project.property("github.package-registry.repository")}")
+    username.set(System.getenv("GITHUB_ACTOR") ?: findProperty("github.package-registry.username"))
+    token.set(System.getenv("GITHUB_TOKEN") ?: findProperty("github.package-registry.password"))
+}
 
 bintray {
     user = System.getenv()["BINTRAY_USER"] ?: findProperty("bintray.user")
