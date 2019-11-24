@@ -15,5 +15,5 @@ jobs:
               with:
                 java-version: ${{ matrix.java }}
             - name: Check
-              run: ./gradlew check
+              run: ./gradlew check --info --stacktrace
               timeout-minutes: 10
