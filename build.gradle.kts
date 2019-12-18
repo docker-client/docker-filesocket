@@ -14,12 +14,12 @@ buildscript {
 }
 
 plugins {
-    java
-    `maven-publish`
+    id("java-library")
+    id("maven-publish")
     id("com.github.ben-manes.versions") version "0.27.0"
     id("com.jfrog.bintray") version "1.8.4"
     id("net.ossindex.audit") version "0.4.11"
-    id("io.freefair.github.package-registry-maven-publish") version "4.1.5"
+    id("io.freefair.github.package-registry-maven-publish") version "4.1.6"
 }
 
 java {
@@ -29,8 +29,9 @@ java {
 
 val dependencyVersions = listOf(
         "com.squareup.okio:okio:2.4.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.3.60",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.60"
+        "org.jetbrains.kotlin:kotlin-stdlib:1.3.61",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.61",
+        "org.slf4j:slf4j-api:1.7.29"
 )
 
 configurations.all {
@@ -47,19 +48,19 @@ repositories {
 }
 
 dependencies {
-    compile("org.slf4j:slf4j-api:1.7.25")
-    testRuntime("org.slf4j:jul-to-slf4j:1.7.25")
-    testRuntime("ch.qos.logback:logback-classic:1.2.3")
+    implementation("org.slf4j:slf4j-api:1.7.29")
+    testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.29")
+    testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
 
-    compile("com.squareup.okio:okio:2.4.1")
-    compile("com.squareup.okhttp3:okhttp:4.2.2")
+    implementation("com.squareup.okio:okio:2.4.1")
+    implementation("com.squareup.okhttp3:okhttp:4.2.2")
 
-    compile("com.kohlschutter.junixsocket:junixsocket-core:2.2.1")
-    compile("com.kohlschutter.junixsocket:junixsocket-common:2.2.1")
+    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.2.1")
+    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.2.1")
 
-    testCompile("org.junit.jupiter:junit-jupiter-api:5.4.0")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
-    testRuntime("org.junit.platform:junit-platform-launcher:1.4.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.5.2")
 }
 
 tasks {
