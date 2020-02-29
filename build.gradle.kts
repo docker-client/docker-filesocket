@@ -28,10 +28,7 @@ java {
 }
 
 val dependencyVersions = listOf(
-        "com.squareup.okio:okio:2.4.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.3.61",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:1.3.61",
-        "org.slf4j:slf4j-api:1.7.29"
+        "org.slf4j:slf4j-api:1.7.30"
 )
 
 configurations.all {
@@ -48,19 +45,19 @@ repositories {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:1.7.29")
-    testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.29")
+    implementation("org.slf4j:slf4j-api:1.7.30")
+    testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.30")
     testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
 
-    implementation("com.squareup.okio:okio:2.4.1")
-    implementation("com.squareup.okhttp3:okhttp:4.2.2")
+    implementation("com.squareup.okio:okio:2.4.3")
+    implementation("com.squareup.okhttp3:okhttp:4.4.0")
 
-    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.2.1")
-    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.2.1")
+    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.3.1")
+    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.3.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.5.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.5.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.0")
 }
 
 tasks {
