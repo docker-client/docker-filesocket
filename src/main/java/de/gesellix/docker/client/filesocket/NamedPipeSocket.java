@@ -3,8 +3,6 @@ package de.gesellix.docker.client.filesocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,6 +19,8 @@ public class NamedPipeSocket extends FileSocket {
 
     private RandomAccessFile namedPipe = null;
     private final AtomicBoolean closed = new AtomicBoolean(false);
+    private InputStream inputStream;
+    private OutputStream outputStream;
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
@@ -35,22 +35,24 @@ public class NamedPipeSocket extends FileSocket {
 
         socketPath = socketPath.replace("/", "\\\\");
         this.namedPipe = new RandomAccessFile(socketPath, "rw");
+        this.inputStream = new NamedPipeDelegatingInputStream(namedPipe);
+        this.outputStream = new NamedPipeDelegatingOutputStream(namedPipe);
     }
 
     @Override
     public InputStream getInputStream() throws IOException {
-        if (namedPipe == null) {
-            throw new SocketException("Socket is not initialized");
+        if (inputStream == null) {
+            throw new SocketException("Socket is not initialized. Please call #connect.");
         }
-        return new FileInputStream(namedPipe.getFD());
+        return inputStream;
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        if (namedPipe == null) {
-            throw new SocketException("Socket is not initialized");
+        if (outputStream == null) {
+            throw new SocketException("Socket is not initialized. Please call #connect.");
         }
-        return new FileOutputStream(namedPipe.getFD());
+        return outputStream;
     }
 
     @Override
@@ -65,10 +67,13 @@ public class NamedPipeSocket extends FileSocket {
             return;
         }
         if (namedPipe != null) {
-            synchronized (this) {
-                namedPipe.close();
-            }
+            namedPipe.close();
         }
-        closed = true;
+        if (inputStream != null) {
+            inputStream.close();
+        }
+        if (outputStream != null) {
+            outputStream.close();
+        }
     }
 }
