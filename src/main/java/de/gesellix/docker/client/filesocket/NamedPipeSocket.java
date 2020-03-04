@@ -13,13 +13,14 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NamedPipeSocket extends FileSocket {
 
     private static final Logger log = LoggerFactory.getLogger(NamedPipeSocket.class);
 
     private RandomAccessFile namedPipe = null;
-    private boolean closed = false;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     @Override
     public void connect(SocketAddress endpoint, int timeout) throws IOException {
@@ -54,11 +55,15 @@ public class NamedPipeSocket extends FileSocket {
 
     @Override
     public boolean isClosed() {
-        return closed;
+        return closed.get();
     }
 
     @Override
     public void close() throws IOException {
+        if (!closed.compareAndSet(false, true)) {
+            // if compareAndSet() returns false closed was already true
+            return;
+        }
         if (namedPipe != null) {
             synchronized (this) {
                 namedPipe.close();
