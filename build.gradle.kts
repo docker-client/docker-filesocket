@@ -27,8 +27,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val dependencyVersions = listOf(
-        "org.slf4j:slf4j-api:1.7.30"
+val dependencyVersions = listOf<String>(
 )
 
 configurations.all {
@@ -45,19 +44,39 @@ repositories {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:1.7.30")
+    constraints {
+        implementation("org.slf4j:slf4j-api") {
+            version {
+                strictly("1.7.30")
+            }
+        }
+        implementation("com.squareup.okio:okio") {
+            version {
+                strictly("2.5.0")
+            }
+        }
+        listOf("org.jetbrains.kotlin:kotlin-stdlib",
+                "org.jetbrains.kotlin:kotlin-stdlib-common").onEach {
+            implementation(it) {
+                version {
+                    strictly("1.3.71")
+                }
+            }
+        }
+    }
+    implementation("org.slf4j:slf4j-api")
     testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.30")
     testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
 
-    implementation("com.squareup.okio:okio:2.4.3")
-    implementation("com.squareup.okhttp3:okhttp:4.4.0")
+    implementation("com.squareup.okio:okio")
+    implementation("com.squareup.okhttp3:okhttp:4.4.1")
 
-    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.3.1")
-    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.3.1")
+    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.3.2")
+    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.3.2")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.1")
 }
 
 tasks {
@@ -83,18 +102,6 @@ val sourcesJar by tasks.registering(Jar::class) {
 
 artifacts {
     add("archives", sourcesJar.get())
-}
-
-fun MavenPom.addDependencies() = withXml {
-    asNode().appendNode("dependencies").let { depNode ->
-        configurations.compile.get().allDependencies.forEach {
-            depNode.appendNode("dependency").apply {
-                appendNode("groupId", it.group)
-                appendNode("artifactId", it.name)
-                appendNode("version", it.version)
-            }
-        }
-    }
 }
 
 val publicationName = "dockerFilesocket"
