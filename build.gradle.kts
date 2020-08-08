@@ -16,10 +16,10 @@ buildscript {
 plugins {
     id("java-library")
     id("maven-publish")
-    id("com.github.ben-manes.versions") version "0.28.0"
-    id("com.jfrog.bintray") version "1.8.4"
+    id("com.github.ben-manes.versions") version "0.29.0"
+    id("com.jfrog.bintray") version "1.8.5"
     id("net.ossindex.audit") version "0.4.11"
-    id("io.freefair.github.package-registry-maven-publish") version "4.1.6"
+    id("io.freefair.github.package-registry-maven-publish") version "5.1.1"
 }
 
 java {
@@ -52,14 +52,14 @@ dependencies {
         }
         implementation("com.squareup.okio:okio") {
             version {
-                strictly("2.5.0")
+                strictly("2.7.0")
             }
         }
         listOf("org.jetbrains.kotlin:kotlin-stdlib",
                 "org.jetbrains.kotlin:kotlin-stdlib-common").onEach {
             implementation(it) {
                 version {
-                    strictly("1.3.71")
+                    strictly("1.3.72")
                 }
             }
         }
@@ -69,14 +69,14 @@ dependencies {
     testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
 
     implementation("com.squareup.okio:okio")
-    implementation("com.squareup.okhttp3:okhttp:4.4.1")
+    implementation("com.squareup.okhttp3:okhttp:4.8.1")
 
     implementation("com.kohlschutter.junixsocket:junixsocket-core:2.3.2")
     implementation("com.kohlschutter.junixsocket:junixsocket-common:2.3.2")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.2")
 }
 
 tasks {
@@ -89,7 +89,7 @@ tasks {
     }
 
     wrapper {
-        gradleVersion = "6.3"
+        gradleVersion = "6.5.1"
         distributionType = Wrapper.DistributionType.ALL
     }
 }
