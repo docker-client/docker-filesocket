@@ -75,8 +75,8 @@ dependencies {
                 "org.jetbrains.kotlin:kotlin-stdlib-common").onEach {
             implementation(it) {
                 version {
-                    strictly("[1.3,1.4)")
-                    prefer("1.3.72")
+                    strictly("[1.3,1.5)")
+                    prefer("1.4.0")
                 }
             }
         }
