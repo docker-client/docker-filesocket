@@ -27,8 +27,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val dependencyVersions = listOf<String>(
-)
+val dependencyVersions = listOf<String>()
 
 configurations.all {
     resolutionStrategy {
@@ -47,32 +46,50 @@ dependencies {
     constraints {
         implementation("org.slf4j:slf4j-api") {
             version {
-                strictly("1.7.30")
+                strictly("[1.7,1.8)")
+                prefer("1.7.30")
             }
         }
         implementation("com.squareup.okio:okio") {
             version {
-                strictly("2.7.0")
+                strictly("[2.5,3)")
+                prefer("2.8.0")
+            }
+        }
+        api("com.squareup.okhttp3:okhttp") {
+            version {
+                strictly("[4,5)")
+                prefer("4.8.1")
+            }
+        }
+        listOf("com.kohlschutter.junixsocket:junixsocket-core",
+                "com.kohlschutter.junixsocket:junixsocket-common").onEach {
+            implementation(it) {
+                version {
+                    strictly("[2.3,3)")
+                    prefer("2.3.2")
+                }
             }
         }
         listOf("org.jetbrains.kotlin:kotlin-stdlib",
                 "org.jetbrains.kotlin:kotlin-stdlib-common").onEach {
             implementation(it) {
                 version {
-                    strictly("1.3.72")
+                    strictly("[1.3,1.4)")
+                    prefer("1.3.72")
                 }
             }
         }
     }
     implementation("org.slf4j:slf4j-api")
-    testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.30")
-    testRuntimeOnly("ch.qos.logback:logback-classic:1.2.3")
+    testRuntimeOnly("org.slf4j:jul-to-slf4j:[1.7,1.8)!!1.7.30")
+    testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.3")
 
+    api("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okio:okio")
-    implementation("com.squareup.okhttp3:okhttp:4.8.1")
 
-    implementation("com.kohlschutter.junixsocket:junixsocket-core:2.3.2")
-    implementation("com.kohlschutter.junixsocket:junixsocket-common:2.3.2")
+    implementation("com.kohlschutter.junixsocket:junixsocket-core")
+    implementation("com.kohlschutter.junixsocket:junixsocket-common")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
@@ -113,14 +130,6 @@ publishing {
             version = rootProject.extra["artifactVersion"] as String
             from(components["java"])
             artifact(sourcesJar.get())
-            versionMapping {
-                usage("java-api") {
-                    fromResolutionOf("runtimeClasspath")
-                }
-                usage("java-runtime") {
-                    fromResolutionResult()
-                }
-            }
         }
     }
 }
