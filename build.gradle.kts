@@ -16,10 +16,10 @@ buildscript {
 plugins {
     id("java-library")
     id("maven-publish")
-    id("com.github.ben-manes.versions") version "0.29.0"
+    id("com.github.ben-manes.versions") version "0.33.0"
     id("com.jfrog.bintray") version "1.8.5"
     id("net.ossindex.audit") version "0.4.11"
-    id("io.freefair.github.package-registry-maven-publish") version "5.1.1"
+    id("io.freefair.github.package-registry-maven-publish") version "5.2.1"
 }
 
 java {
@@ -59,7 +59,7 @@ dependencies {
         api("com.squareup.okhttp3:okhttp") {
             version {
                 strictly("[4,5)")
-                prefer("4.8.1")
+                prefer("4.9.0")
             }
         }
         listOf("com.kohlschutter.junixsocket:junixsocket-core",
@@ -76,7 +76,7 @@ dependencies {
             implementation(it) {
                 version {
                     strictly("[1.3,1.5)")
-                    prefer("1.4.0")
+                    prefer("1.4.10")
                 }
             }
         }
@@ -91,9 +91,9 @@ dependencies {
     implementation("com.kohlschutter.junixsocket:junixsocket-core")
     implementation("com.kohlschutter.junixsocket:junixsocket-common")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.6.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.0")
 }
 
 tasks {
