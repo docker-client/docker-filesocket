@@ -29,8 +29,8 @@ public class UnixSocket extends FileSocket {
         InetSocketAddress inetSocketAddress = (InetSocketAddress) endpoint;
         InetAddress address = inetSocketAddress.getAddress();
         String socketPath = decodeHostname(address);
-
         log.debug("connect via '{}'...", socketPath);
+
         File socketFile = new File(socketPath);
 
         socket = AFUNIXSocket.newInstance();
@@ -69,12 +69,12 @@ public class UnixSocket extends FileSocket {
 
     @Override
     public boolean isConnected() {
-        if (socket != null) {
-            return socket.isConnected();
-        }
-        else {
-            return false;
-        }
+        return socket != null &&  socket.isConnected();
+    }
+
+    @Override
+    public boolean isClosed() {
+        return socket != null && socket.isClosed();
     }
 
     @Override
