@@ -105,10 +105,10 @@ tasks {
         dependsOn("build")
     }
 
-    wrapper {
-        gradleVersion = "6.6.1"
-        distributionType = Wrapper.DistributionType.ALL
-    }
+  wrapper {
+    gradleVersion = "6.8.2"
+    distributionType = Wrapper.DistributionType.ALL
+  }
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
