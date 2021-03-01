@@ -100,11 +100,6 @@ tasks {
   withType(Test::class.java) {
     useJUnitPlatform()
   }
-
-  wrapper {
-    gradleVersion = "6.8.2"
-    distributionType = Wrapper.DistributionType.ALL
-  }
 }
 
 val javadocJar by tasks.registering(Jar::class) {
