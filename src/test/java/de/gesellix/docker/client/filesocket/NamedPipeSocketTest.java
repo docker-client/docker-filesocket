@@ -11,10 +11,10 @@ import static java.net.InetAddress.getByAddress;
 
 class NamedPipeSocketTest {
 
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    void canConnect() throws IOException {
-        NamedPipeSocket namedPipeSocket = new NamedPipeSocket();
-        namedPipeSocket.connect(new InetSocketAddress(getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[] {0, 0, 0, 0}), 0));
-    }
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void canConnect() throws IOException {
+    NamedPipeSocket namedPipeSocket = new NamedPipeSocket();
+    namedPipeSocket.connect(new InetSocketAddress(getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[] {0, 0, 0, 0}), 0));
+  }
 }

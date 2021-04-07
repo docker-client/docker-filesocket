@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NamedPipeSocketFactoryTest {
 
-    @Test
-    void createsNamedPipeSocket() {
-        assertTrue(new NamedPipeSocketFactory().createSocket() instanceof NamedPipeSocket);
-    }
+  @Test
+  void createsNamedPipeSocket() {
+    assertTrue(new NamedPipeSocketFactory().createSocket() instanceof NamedPipeSocket);
+  }
 }

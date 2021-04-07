@@ -4,8 +4,8 @@ import java.net.Socket;
 
 public class UnixSocketFactory extends FileSocketFactory {
 
-    @Override
-    public Socket createSocket() {
-        return new UnixSocket();
-    }
+  @Override
+  public Socket createSocket() {
+    return new UnixSocket();
+  }
 }
