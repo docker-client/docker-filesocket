@@ -5,9 +5,9 @@ plugins {
   id("java-library")
   id("maven-publish")
   id("signing")
-  id("com.github.ben-manes.versions") version "0.36.0"
+  id("com.github.ben-manes.versions") version "0.38.0"
   id("net.ossindex.audit") version "0.4.11"
-  id("io.freefair.maven-central.validate-poms") version "5.3.0"
+  id("io.freefair.maven-central.validate-poms") version "5.3.3.3"
   id("io.github.gradle-nexus.publish-plugin") version "1.0.0"
 }
 
@@ -26,13 +26,13 @@ dependencies {
     implementation("com.squareup.okio:okio") {
       version {
         strictly("[2.5,3)")
-        prefer("2.8.0")
+        prefer("2.10.0")
       }
     }
     api("com.squareup.okhttp3:okhttp") {
       version {
         strictly("[4,5)")
-        prefer("4.9.0")
+        prefer("4.9.1")
       }
     }
     listOf(
@@ -68,9 +68,9 @@ dependencies {
   implementation("com.kohlschutter.junixsocket:junixsocket-core")
   implementation("com.kohlschutter.junixsocket:junixsocket-common")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.1")
 }
 
 val dependencyVersions = listOf<String>(
