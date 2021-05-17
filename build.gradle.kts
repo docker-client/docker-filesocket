@@ -70,7 +70,7 @@ dependencies {
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.1")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.2")
 }
 
 val dependencyVersions = listOf<String>(
