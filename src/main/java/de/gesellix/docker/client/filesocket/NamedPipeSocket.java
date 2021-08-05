@@ -24,7 +24,7 @@ public class NamedPipeSocket extends FileSocket {
 
   @Override
   public void connect(SocketAddress endpoint, int timeout) throws IOException {
-    if (!InetSocketAddress.class.isInstance(endpoint)) {
+    if (!(endpoint instanceof InetSocketAddress)) {
       throw new IllegalArgumentException("Expected endpoint to be a InetSocketAddress");
     }
 
