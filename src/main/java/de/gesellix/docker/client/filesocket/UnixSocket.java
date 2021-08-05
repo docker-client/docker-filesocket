@@ -31,15 +31,11 @@ public class UnixSocket extends FileSocket {
     String socketPath = decodeHostname(address);
     log.debug("connect via '{}'...", socketPath);
 
+    int socketTimeout = Math.max(timeout, 0);
     File socketFile = new File(socketPath);
 
     socket = AFUNIXSocket.newInstance();
-
-    int socketTimeout = timeout;
-    if (timeout < 0) {
-      socketTimeout = 0;
-    }
-    socket.connect(new AFUNIXSocketAddress(socketFile), socketTimeout);
+    socket.connect(AFUNIXSocketAddress.of(socketFile), socketTimeout);
     socket.setSoTimeout(socketTimeout);
   }
 
