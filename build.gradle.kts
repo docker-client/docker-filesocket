@@ -53,14 +53,14 @@ dependencies {
       implementation(it) {
         version {
           strictly("[1.3,1.6)")
-          prefer("1.4.30")
+          prefer("1.5.31")
         }
       }
     }
   }
   implementation("org.slf4j:slf4j-api")
   testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.32")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.2.6")
+  testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.6")
 
   api("com.squareup.okhttp3:okhttp")
   implementation("com.squareup.okio:okio")
