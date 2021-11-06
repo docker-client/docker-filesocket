@@ -23,6 +23,9 @@ jobs:
           distribution: 'zulu'
           java-version: ${{ matrix.java }}
           cache: 'gradle'
+      - name: Install Docker on macOS
+        if: matrix.os == 'macos-latest'
+        uses: ./.github/actions/docker-install-macos
       - name: clean build
         run: ./gradlew clean build --info --stacktrace
       - name: Publish Test Report
