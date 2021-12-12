@@ -20,6 +20,9 @@ jobs:
           distribution: 'zulu'
           java-version: 8
           cache: 'gradle'
+      - name: Prepare Named Pipe integration test on Windows
+        if: matrix.os == 'windows-latest'
+        uses: ./.github/actions/create-named-pipe
       - name: Set artifact version
         run: |
           echo "RELEASE_VERSION=$(echo '${{ github.event.release.tag_name }}' | sed -e s/^v//)" >> $GITHUB_ENV
