@@ -6,18 +6,21 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.SocketException;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.channels.Channels;
+import java.nio.file.FileSystemException;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NamedPipeSocket extends FileSocket {
 
   private static final Logger log = LoggerFactory.getLogger(NamedPipeSocket.class);
 
-  private RandomAccessFile namedPipe = null;
+  private AsynchronousFileByteChannel channel;
   private final AtomicBoolean closed = new AtomicBoolean(false);
   private InputStream inputStream;
   private OutputStream outputStream;
@@ -34,23 +37,49 @@ public class NamedPipeSocket extends FileSocket {
     log.debug("connect via '{}'...", socketPath);
 
     socketPath = socketPath.replace("/", "\\\\");
-    this.namedPipe = new RandomAccessFile(socketPath, "rw");
-    this.inputStream = new NamedPipeDelegatingInputStream(namedPipe);
-    this.outputStream = new NamedPipeDelegatingOutputStream(namedPipe);
+
+    long startedAt = System.currentTimeMillis();
+    timeout = Math.max(timeout, 10_000);
+    while (true) {
+      try {
+        channel = new AsynchronousFileByteChannel(
+            AsynchronousFileChannel.open(
+                Paths.get(socketPath),
+                StandardOpenOption.READ,
+                StandardOpenOption.WRITE
+            )
+        );
+        break;
+      }
+      catch (FileSystemException e) {
+        if (System.currentTimeMillis() - startedAt >= timeout) {
+          throw new RuntimeException(e);
+        }
+        else {
+          // requires a bit more code and the net.java.dev.jna:jna dependency
+//          Kernel32.INSTANCE.WaitNamedPipe(socketFileName, 100);
+          try {
+            Thread.sleep(100);
+          }
+          catch (InterruptedException ignored) {
+          }
+        }
+      }
+    }
   }
 
   @Override
-  public InputStream getInputStream() throws IOException {
+  public InputStream getInputStream() {
     if (inputStream == null) {
-      throw new SocketException("Socket is not initialized. Please call #connect.");
+      this.inputStream = Channels.newInputStream(channel);
     }
     return inputStream;
   }
 
   @Override
-  public OutputStream getOutputStream() throws IOException {
+  public OutputStream getOutputStream() {
     if (outputStream == null) {
-      throw new SocketException("Socket is not initialized. Please call #connect.");
+      this.outputStream = Channels.newOutputStream(channel);
     }
     return outputStream;
   }
@@ -66,8 +95,8 @@ public class NamedPipeSocket extends FileSocket {
       // if compareAndSet() returns false closed was already true
       return;
     }
-    if (namedPipe != null) {
-      namedPipe.close();
+    if (channel != null) {
+      channel.close();
     }
     if (inputStream != null) {
       inputStream.close();
