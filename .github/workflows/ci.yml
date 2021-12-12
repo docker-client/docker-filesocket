@@ -26,6 +26,9 @@ jobs:
       - name: Install Docker on macOS
         if: matrix.os == 'macos-latest'
         uses: ./.github/actions/docker-install-macos
+      - name: Prepare Named Pipe integration test on Windows
+        if: matrix.os == 'windows-latest'
+        uses: ./.github/actions/create-named-pipe
       - name: clean build
         run: ./gradlew clean build --info --stacktrace
       - name: Publish Test Report

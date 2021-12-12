@@ -1,0 +1,19 @@
+---
+name: "Creates a Named Pipe"
+description: "Creates a Named Pipe for integration tests on Windows"
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        docker pull gesellix/npipe:windows
+        docker create --name npipe gesellix/npipe:windows
+        docker cp npipe:/npipe.exe ./npipe.exe
+        docker rm npipe
+        docker rmi gesellix/npipe:windows
+        ./npipe.exe \\\\.\\pipe\\hijack_test &
+        disown -h
+      shell: bash
+branding:
+  icon: "tag"
+  color: "blue"
+...
