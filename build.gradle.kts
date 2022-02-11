@@ -20,7 +20,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api") {
       version {
         strictly("[1.7,1.8)")
-        prefer("1.7.32")
+        prefer("1.7.36")
       }
     }
     implementation("com.squareup.okio:okio") {
@@ -32,7 +32,7 @@ dependencies {
     api("com.squareup.okhttp3:okhttp") {
       version {
         strictly("[4,5)")
-        prefer("4.9.2")
+        prefer("4.9.3")
       }
     }
     listOf(
@@ -52,7 +52,7 @@ dependencies {
     ).onEach {
       implementation(it) {
         version {
-          strictly("[1.3,1.6)")
+          strictly("[1.3,1.7)")
           prefer("1.5.31")
         }
       }
@@ -60,7 +60,7 @@ dependencies {
   }
   implementation("org.slf4j:slf4j-api")
   testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.36")
-  testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.9")
+  testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.10")
 
   api("com.squareup.okhttp3:okhttp")
   implementation("com.squareup.okio:okio")
