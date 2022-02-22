@@ -48,12 +48,14 @@ dependencies {
     }
     listOf(
       "org.jetbrains.kotlin:kotlin-stdlib",
-      "org.jetbrains.kotlin:kotlin-stdlib-common"
+      "org.jetbrains.kotlin:kotlin-stdlib-common",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     ).onEach {
       implementation(it) {
         version {
           strictly("[1.3,1.7)")
-          prefer("1.5.31")
+          prefer("1.6.10")
         }
       }
     }
