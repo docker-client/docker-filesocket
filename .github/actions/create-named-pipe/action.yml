@@ -5,11 +5,11 @@ runs:
   using: "composite"
   steps:
     - run: |
-        docker pull gesellix/npipe:windows
-        docker create --name npipe gesellix/npipe:windows
+        docker pull gesellix/npipe:2022-04-19T16-14-00
+        docker create --name npipe gesellix/npipe:2022-04-19T16-14-00
         docker cp npipe:/npipe.exe ./npipe.exe
         docker rm npipe
-        docker rmi gesellix/npipe:windows
+        docker rmi gesellix/npipe:2022-04-19T16-14-00
         ./npipe.exe \\\\.\\pipe\\hijack_test &
         disown -h
       shell: bash
