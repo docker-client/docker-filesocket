@@ -5,6 +5,8 @@ runs:
   using: "composite"
   steps:
     # From https://github.com/docker/for-mac/issues/2359#issuecomment-943131345
+    # Install from the command line is officially supported since Docker Desktop 4.7.0:
+    # https://docs.docker.com/desktop/mac/install/#install-from-the-command-line
     - run: |
         brew install --cask docker
         sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
