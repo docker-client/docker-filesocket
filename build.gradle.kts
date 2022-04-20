@@ -26,7 +26,7 @@ dependencies {
     implementation("com.squareup.okio:okio") {
       version {
         strictly("[2.5,4)")
-        prefer("3.0.0")
+        prefer("3.1.0")
       }
     }
     api("com.squareup.okhttp3:okhttp") {
