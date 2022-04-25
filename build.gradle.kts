@@ -67,7 +67,9 @@ dependencies {
   api("com.squareup.okhttp3:okhttp:4.9.3")
   implementation("com.squareup.okio:okio:3.1.0")
 
-  implementation("com.kohlschutter.junixsocket:junixsocket-core:2.4.0")
+  implementation("com.kohlschutter.junixsocket:junixsocket-core:2.4.0@pom") {
+    isTransitive = true
+  }
   implementation("com.kohlschutter.junixsocket:junixsocket-common:2.4.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
