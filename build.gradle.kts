@@ -23,10 +23,15 @@ dependencies {
         prefer("1.7.36")
       }
     }
-    implementation("com.squareup.okio:okio") {
-      version {
-        strictly("[2.5,4)")
-        prefer("3.1.0")
+    listOf(
+      "com.squareup.okio:okio",
+      "com.squareup.okio:okio-jvm"
+    ).forEach {
+      implementation(it) {
+        version {
+          strictly("[3,4)")
+          prefer("3.1.0")
+        }
       }
     }
     api("com.squareup.okhttp3:okhttp") {
@@ -65,7 +70,7 @@ dependencies {
   testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.11")
 
   api("com.squareup.okhttp3:okhttp:4.9.3")
-  implementation("com.squareup.okio:okio:3.1.0")
+  implementation("com.squareup.okio:okio-jvm:3.1.0")
 
   implementation("com.kohlschutter.junixsocket:junixsocket-core:2.4.0@pom") {
     isTransitive = true
