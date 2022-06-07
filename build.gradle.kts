@@ -47,7 +47,7 @@ dependencies {
       implementation(it) {
         version {
           strictly("[2.4,3)")
-          prefer("2.4.0")
+          prefer("2.5.0")
         }
       }
     }
