@@ -70,7 +70,7 @@ dependencies {
   testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.11")
 
   api("com.squareup.okhttp3:okhttp:4.10.0")
-  implementation("com.squareup.okio:okio-jvm:3.1.0")
+  implementation("com.squareup.okio:okio-jvm:3.2.0")
 
   implementation("com.kohlschutter.junixsocket:junixsocket-core:2.5.1@pom") {
     isTransitive = true
