@@ -66,7 +66,7 @@ dependencies {
     }
   }
   implementation("org.slf4j:slf4j-api:1.7.36")
-  testRuntimeOnly("org.slf4j:jul-to-slf4j:1.7.36")
+  testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.0")
   testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.2.11")
 
   api("com.squareup.okhttp3:okhttp:4.10.0")
