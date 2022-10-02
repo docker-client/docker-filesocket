@@ -5,14 +5,16 @@ runs:
   using: "composite"
   steps:
     - run: |
-        docker pull gesellix/npipe:2022-04-19T16-14-00
-        docker create --name npipe gesellix/npipe:2022-04-19T16-14-00
+        docker pull ${{ env.NPIPE_IMAGE }}
+        docker create --name npipe ${{ env.NPIPE_IMAGE }}
         docker cp npipe:/npipe.exe ./npipe.exe
         docker rm npipe
-        docker rmi gesellix/npipe:2022-04-19T16-14-00
+        docker rmi ${{ env.NPIPE_IMAGE }}
         ./npipe.exe \\\\.\\pipe\\hijack_test &
         disown -h
       shell: bash
+      env:
+        NPIPE_IMAGE: gesellix/npipe:2022-07-31T14-30-00
 branding:
   icon: "tag"
   color: "blue"
