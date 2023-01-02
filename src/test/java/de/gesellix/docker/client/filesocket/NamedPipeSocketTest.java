@@ -4,15 +4,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static java.net.InetAddress.getByAddress;
 
@@ -21,14 +27,21 @@ class NamedPipeSocketTest {
   @Test
   @EnabledOnOs(OS.WINDOWS)
   void canConnect() throws IOException {
-    NamedPipeSocket namedPipeSocket = new NamedPipeSocket();
-    namedPipeSocket.connect(new InetSocketAddress(getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[] {0, 0, 0, 0}), 0));
+    try (NamedPipeSocket namedPipeSocket = new NamedPipeSocket()) {
+      namedPipeSocket.connect(new InetSocketAddress(getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[] {0, 0, 0, 0}), 0));
+    }
   }
 
   @Test
   @EnabledOnOs(OS.WINDOWS)
   void testPlainHijacked() throws Exception {
     String namedPipeName = "//./pipe/hijack_test";
+
+    Process namedPipeServer = null;
+    if (!new File(namedPipeName).exists()) {
+      namedPipeServer = createNamedPipeServer();
+    }
+
     String containerId = "hijacking";
 
     NamedPipeSocket namedPipeSocket = new NamedPipeSocket();
@@ -49,8 +62,7 @@ class NamedPipeSocketTest {
         outputStream.write("\n".getBytes(StandardCharsets.UTF_8));
       }
       outputStream.write("\n".getBytes(StandardCharsets.UTF_8));
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
 
@@ -64,15 +76,13 @@ class NamedPipeSocketTest {
       while (!readCanBeFinished.get()) {
         try {
           Thread.sleep(100);
-        }
-        catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
           // ignored
         }
         int read = 0;
         try {
           read = inputStream.read(buf, 0, 1024);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
           e.printStackTrace();
         }
         if (read > -1) {
@@ -92,11 +102,9 @@ class NamedPipeSocketTest {
           outputStream.write((n + " " + content + " - " + new Date()).getBytes(StandardCharsets.UTF_8));
 
           Thread.sleep(500);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
           e.printStackTrace();
-        }
-        finally {
+        } finally {
           n--;
         }
       }
@@ -116,5 +124,73 @@ class NamedPipeSocketTest {
       System.out.println("// lock done //");
     }
     namedPipeSocket.close();
+
+    if (namedPipeServer != null) {
+      if (namedPipeServer.isAlive()) {
+        namedPipeServer.destroy();
+      }
+      boolean createNamedPipeFinishedBeforeTimeout = namedPipeServer.waitFor(10, TimeUnit.MINUTES);
+      int createNamedPipeExitValue = namedPipeServer.exitValue();
+    }
+  }
+
+  private Process createNamedPipeServer() throws InterruptedException, IOException {
+    Process namedPipeServer;
+    String npipeImage = "gesellix/npipe:2022-07-31T14-30-00";
+    // docker pull gesellix/npipe:<tag>
+    exec(5, TimeUnit.MINUTES, "docker", "pull", npipeImage);
+    // docker create --name npipe gesellix/npipe:<tag>
+    exec(1, TimeUnit.MINUTES, "docker", "create", "--name", "npipe", npipeImage);
+    // docker cp npipe:/npipe.exe ./npipe.exe
+    exec(1, TimeUnit.MINUTES, "docker", "cp", "npipe:/npipe.exe", "./npipe.exe");
+    // docker rm npipe
+    exec(1, TimeUnit.MINUTES, "docker", "rm", "npipe");
+    // docker rmi gesellix/npipe:<tag>
+    exec(1, TimeUnit.MINUTES, "docker", "rmi", npipeImage);
+    // ./npipe.exe \\\\.\\pipe\\hijack_test &
+    namedPipeServer = exec("./npipe.exe", "\\\\.\\pipe\\hijack_test");
+    return namedPipeServer;
+  }
+
+  /**
+   * Run the command and wait for the process to finish or until the timeout is reached.
+   */
+  private Process exec(long timeout, TimeUnit timeoutUnit, String... command) throws InterruptedException, IOException {
+    Process process = new ProcessBuilder(command)
+//        .inheritIO()
+        .start();
+    Executors.newSingleThreadExecutor().submit(new StreamReader(process.getInputStream(), System.out::println));
+    Executors.newSingleThreadExecutor().submit(new StreamReader(process.getErrorStream(), System.err::println));
+    boolean processFinishedBeforeTimeout = process.waitFor(timeout, timeoutUnit);
+    int processExitValue = process.exitValue();
+    return process;
+  }
+
+  /**
+   * Run the command and don't wait for the process to finish.
+   */
+  private Process exec(String... command) throws IOException {
+    Process process = new ProcessBuilder(command)
+//        .inheritIO()
+        .start();
+    Executors.newSingleThreadExecutor().submit(new StreamReader(process.getInputStream(), System.out::println));
+    Executors.newSingleThreadExecutor().submit(new StreamReader(process.getErrorStream(), System.err::println));
+    return process;
+  }
+
+  static class StreamReader implements Runnable {
+
+    private final BufferedReader reader;
+    private final Consumer<String> consumer;
+
+    public StreamReader(InputStream inputStream, Consumer<String> consumer) {
+      this.reader = new BufferedReader(new InputStreamReader(inputStream));
+      this.consumer = consumer;
+    }
+
+    @Override
+    public void run() {
+      reader.lines().forEach(consumer);
+    }
   }
 }
