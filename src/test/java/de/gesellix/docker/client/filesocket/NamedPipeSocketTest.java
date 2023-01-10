@@ -137,17 +137,11 @@ class NamedPipeSocketTest {
   private Process createNamedPipeServer() throws InterruptedException, IOException {
     Process namedPipeServer;
     String npipeImage = "gesellix/npipe:2022-07-31T14-30-00";
-    // docker pull gesellix/npipe:<tag>
     exec(5, TimeUnit.MINUTES, "docker", "pull", npipeImage);
-    // docker create --name npipe gesellix/npipe:<tag>
     exec(1, TimeUnit.MINUTES, "docker", "create", "--name", "npipe", npipeImage);
-    // docker cp npipe:/npipe.exe ./npipe.exe
     exec(1, TimeUnit.MINUTES, "docker", "cp", "npipe:/npipe.exe", "./npipe.exe");
-    // docker rm npipe
     exec(1, TimeUnit.MINUTES, "docker", "rm", "npipe");
-    // docker rmi gesellix/npipe:<tag>
     exec(1, TimeUnit.MINUTES, "docker", "rmi", npipeImage);
-    // ./npipe.exe \\\\.\\pipe\\hijack_test &
     namedPipeServer = exec("./npipe.exe", "\\\\.\\pipe\\hijack_test");
     return namedPipeServer;
   }
