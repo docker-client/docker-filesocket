@@ -14,7 +14,7 @@ runs:
         disown -h
       shell: bash
       env:
-        NPIPE_IMAGE: gesellix/npipe:2022-07-31T14-30-00
+        NPIPE_IMAGE: gesellix/npipe:2023-07-02T11-38-00
 branding:
   icon: "tag"
   color: "blue"
