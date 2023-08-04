@@ -75,7 +75,7 @@ dependencies {
   implementation("com.kohlschutter.junixsocket:junixsocket-core:2.6.2@pom") {
     isTransitive = true
   }
-  implementation("com.kohlschutter.junixsocket:junixsocket-common:2.6.2")
+  implementation("com.kohlschutter.junixsocket:junixsocket-common:2.7.0")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
