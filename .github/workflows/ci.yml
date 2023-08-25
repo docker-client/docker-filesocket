@@ -41,7 +41,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Install Docker on macOS
         if: matrix.os == 'macos-latest'
-        uses: ./.github/actions/docker-install-macos
+        uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: Prepare Named Pipe integration test on Windows
         if: matrix.os == 'windows-latest'
         uses: ./.github/actions/create-named-pipe
