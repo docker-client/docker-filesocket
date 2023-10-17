@@ -69,7 +69,7 @@ dependencies {
   testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.9")
   testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.3.11")
 
-  api("com.squareup.okhttp3:okhttp:4.11.0")
+  api("com.squareup.okhttp3:okhttp:4.12.0")
   implementation("com.squareup.okio:okio:3.6.0")
 
   implementation("com.kohlschutter.junixsocket:junixsocket-core:2.8.1@pom") {
