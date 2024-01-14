@@ -43,7 +43,7 @@ dependencies {
     listOf(
       "com.kohlschutter.junixsocket:junixsocket-core",
       "com.kohlschutter.junixsocket:junixsocket-common"
-    ).onEach {
+    ).forEach {
       implementation(it) {
         version {
           strictly("[2.4,3)")
@@ -56,11 +56,11 @@ dependencies {
       "org.jetbrains.kotlin:kotlin-stdlib-common",
       "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
       "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    ).onEach {
+    ).forEach {
       implementation(it) {
         version {
           strictly("[1.6,1.10)")
-          prefer("1.9.21")
+          prefer("1.9.22")
         }
       }
     }
