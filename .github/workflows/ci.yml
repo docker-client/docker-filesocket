@@ -22,6 +22,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          # pinned to macos-13 due to https://github.com/actions/runner-images/issues/9254
           - macos-13
         java:
           - 8
