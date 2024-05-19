@@ -22,7 +22,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
-          - macos-latest
+          - macos-13
         java:
           - 8
           - 17
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Install Docker on macOS
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-13'
         uses: douglascamata/setup-docker-macos-action@v1-alpha
       - name: Prepare Named Pipe integration test on Windows
         if: matrix.os == 'windows-latest'
