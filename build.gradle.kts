@@ -59,7 +59,7 @@ dependencies {
     ).forEach {
       implementation(it) {
         version {
-          strictly("[1.6,1.10)")
+          strictly("[1.6,2.1)")
           prefer("1.9.25")
         }
       }
