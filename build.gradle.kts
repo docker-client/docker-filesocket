@@ -77,9 +77,9 @@ dependencies {
   }
   implementation("com.kohlschutter.junixsocket:junixsocket-common:2.10.0")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.0")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.0")
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.1")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.1")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.1")
 }
 
 val dependencyVersions = listOf<String>(
