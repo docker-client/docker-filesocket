@@ -13,7 +13,7 @@ slf4j = "2.0.16"
 slf4jVersionrange = "[1.7,3)"
 
 [libraries]
-junit4 = { module = "junit:junit", version = "4.13.1" }
+junit4 = { module = "junit:junit", version = "4.13.2" }
 junixsocketCore = { module = "com.kohlschutter.junixsocket:junixsocket-core", version.ref = "junixsocket" }
 junixsocketCommon = { module = "com.kohlschutter.junixsocket:junixsocket-common", version.ref = "junixsocket" }
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
