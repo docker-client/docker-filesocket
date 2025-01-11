@@ -19,35 +19,33 @@ dependencies {
   constraints {
     implementation("org.slf4j:slf4j-api") {
       version {
-        strictly("[1.7,3)")
-        prefer("2.0.16")
+        strictly(libs.versions.slf4jVersionrange.get())
+        prefer(libs.versions.slf4j.get())
       }
     }
     listOf(
-      "com.squareup.okio:okio",
-      "com.squareup.okio:okio-jvm",
+      libs.bundles.okio,
     ).forEach {
       implementation(it) {
         version {
-          strictly("[3,4)")
-          prefer("3.9.1")
+          strictly(libs.versions.okioVersionrange.get())
+          prefer(libs.versions.okio.get())
         }
       }
     }
     api("com.squareup.okhttp3:okhttp") {
       version {
-        strictly("[4,5)")
-        prefer("4.12.0")
+        strictly(libs.versions.okhttpVersionrange.get())
+        prefer(libs.versions.okhttp.get())
       }
     }
     listOf(
-      "com.kohlschutter.junixsocket:junixsocket-core",
-      "com.kohlschutter.junixsocket:junixsocket-common"
+      libs.bundles.junixsocket
     ).forEach {
       implementation(it) {
         version {
-          strictly("[2.4,3)")
-          prefer("2.10.1")
+          strictly(libs.versions.junixsocketVersionrange.get())
+          prefer(libs.versions.junixsocket.get())
         }
       }
     }
@@ -65,17 +63,17 @@ dependencies {
       }
     }
   }
-  implementation("org.slf4j:slf4j-api:2.0.16")
-  testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.16")
-  testRuntimeOnly("ch.qos.logback:logback-classic:[1.2,2)!!1.3.14")
+  implementation(libs.slf4j)
+  testRuntimeOnly("org.slf4j:jul-to-slf4j:${libs.versions.slf4j.get()}")
+  testRuntimeOnly("ch.qos.logback:logback-classic:${libs.versions.logbackVersionrange.get()}!!${libs.versions.logback.get()}")
 
-  api("com.squareup.okhttp3:okhttp:4.12.0")
-  implementation("com.squareup.okio:okio:3.9.1")
+  api(libs.okhttp)
+  implementation(libs.okio)
 
-  implementation("com.kohlschutter.junixsocket:junixsocket-core:2.10.1@pom") {
+  implementation("com.kohlschutter.junixsocket:junixsocket-core:${libs.versions.junixsocket.get()}@pom") {
     isTransitive = true
   }
-  implementation("com.kohlschutter.junixsocket:junixsocket-common:2.10.1")
+  implementation(libs.junixsocketCommon)
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.11.4")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.11.4")
