@@ -43,10 +43,12 @@ class AsyncHijackSimulationTest {
   void startFakeEngine() throws IOException {
     serverSocket = new ServerSocket(0);
     port = serverSocket.getLocalPort();
+    System.out.println("[Server] Listening on port " + port);
 
     // accept one connection
     serverExecutor.submit(() -> {
       try (Socket sock = serverSocket.accept()) {
+        System.out.println("[Server] Accepted connection from " + sock.getRemoteSocketAddress());
         handleConnection(sock);
       } catch (IOException ignored) {
       }
@@ -63,22 +65,26 @@ class AsyncHijackSimulationTest {
     OutputStream out = sock.getOutputStream();
 
     // --- 1) HTTP Upgrade handshake ---
+    System.out.println("[Server] Starting HTTP handshake");
     String line;
     boolean upgrade = false;
     while (!(line = httpIn.readLine()).isEmpty()) {
+      System.out.println("[Server] > " + line);
       if (line.toLowerCase().startsWith("upgrade: tcp")) {
         upgrade = true;
       }
     }
     if (!upgrade) {
       out.write("HTTP/1.1 400 Bad Request\r\nContent-Length:0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+      System.out.println("[Server] Sent 400 Bad Request");
       return;
     }
-    out.write(("HTTP/1.1 101 Switching Protocols\r\n" +
+    String switching = "HTTP/1.1 101 Switching Protocols\r\n" +
         "Connection: Upgrade\r\n" +
-        "Upgrade: tcp\r\n\r\n")
-        .getBytes(StandardCharsets.UTF_8));
+        "Upgrade: tcp\r\n\r\n";
+    out.write(switching.getBytes(StandardCharsets.UTF_8));
     out.flush();
+    System.out.println("[Server] Sent 101 Switching Protocols");
 
     // --- 2) Concurrent log broadcaster ---
     ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
@@ -88,29 +94,31 @@ class AsyncHijackSimulationTest {
       @Override
       public void run() {
         try {
-          // alternate INFO / ERROR
           String msg = (i % 2 == 1)
               ? "INFO: regular update " + ((i + 1) / 2) + "\n"
               : "ERROR: something went wrong at step " + (i / 2) + "\n";
           out.write(msg.getBytes(StandardCharsets.UTF_8));
           out.flush();
+          System.out.println("[Server] Sent log: " + msg.trim());
           i++;
-          // stop after 20 lines
-          if (i > 20) logExec.shutdown();
+          if (i > 20) {
+            System.out.println("[Server] Finished sending logs");
+            logExec.shutdown();
+          }
         } catch (IOException e) {
-          logExec.shutdown();  // socket closed
+          System.out.println("[Server] Log broadcaster shutting down due to " + e.getMessage());
+          logExec.shutdown();
         }
       }
     };
-    // schedule every 100ms
     logExec.scheduleAtFixedRate(broadcast, 0, 100, TimeUnit.MILLISECONDS);
 
     // --- 3) Wait for socket close to exit ---
     try {
-      // just block until the client closes the socket
       sock.getInputStream().read();
     } catch (IOException ignored) {
     } finally {
+      System.out.println("[Server] Socket closed, cleaning up");
       logExec.shutdownNow();
     }
   }
@@ -119,19 +127,25 @@ class AsyncHijackSimulationTest {
   void testAsyncHijackWithLogFiltering() throws Exception {
     Pattern errorPattern = Pattern.compile("^ERROR:.*step ([0-9]+)$");
     try (Socket client = new Socket("127.0.0.1", port)) {
+      System.out.println("[Client] Connected to server on port " + port);
       BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
       OutputStream os = client.getOutputStream();
 
       // 1) Perform HTTP Upgrade
-      os.write(("GET /containers/fake/hijack HTTP/1.1\r\n" +
+      String req = "GET /containers/fake/hijack HTTP/1.1\r\n" +
           "Host: localhost\r\n" +
           "Connection: Upgrade\r\n" +
-          "Upgrade: tcp\r\n\r\n")
-          .getBytes(StandardCharsets.UTF_8));
+          "Upgrade: tcp\r\n\r\n";
+      os.write(req.getBytes(StandardCharsets.UTF_8));
       os.flush();
+      System.out.println("[Client] Sent HTTP upgrade request");
+
       // read status + headers
-      Assertions.assertTrue(reader.readLine().contains("101 Switching Protocols"));
-      while (!reader.readLine().isEmpty()) {
+      String status = reader.readLine();
+      System.out.println("[Client] Received: " + status);
+      Assertions.assertTrue(status.contains("101 Switching Protocols"));
+      while (!(status = reader.readLine()).isEmpty()) {
+        System.out.println("[Client] > " + status);
       }
 
       // 2) Start filtering thread
@@ -140,8 +154,10 @@ class AsyncHijackSimulationTest {
         try {
           String ln;
           while ((ln = reader.readLine()) != null) {
+            System.out.println("[Client] Received log: " + ln);
             Matcher m = errorPattern.matcher(ln);
             if (m.matches()) {
+              System.out.println("[Client] Matched ERROR pattern, step=" + m.group(1));
               errors.add(m.group(1));
             }
           }
@@ -153,9 +169,10 @@ class AsyncHijackSimulationTest {
       // 3) Let logs flow and wait for first ERROR
       String step = errors.poll(5, TimeUnit.SECONDS);
       Assertions.assertNotNull(step, "Expected at least one ERROR log");
-      System.out.println("Captured error at step " + step);
+      System.out.println("[Client] Captured error at step " + step);
 
       // 4) Close client to terminate the server
+      System.out.println("[Client] Closing connection");
       client.close();
       filterThread.join(1000);
     }
