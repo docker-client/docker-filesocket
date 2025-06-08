@@ -12,6 +12,20 @@ plugins {
 }
 
 repositories {
+//  mavenLocal()
+//  maven {
+//    name = "githubPackages"
+//    url = uri("https://maven.pkg.github.com/gesellix/okhttp")
+//    // username and password (a personal Github access token) should be specified as
+//    // `githubPackagesUsername` and `githubPackagesPassword` Gradle properties or alternatively
+//    // as `ORG_GRADLE_PROJECT_githubPackagesUsername` and `ORG_GRADLE_PROJECT_githubPackagesPassword`
+//    // environment variables
+//    credentials(PasswordCredentials::class)
+////    credentials {
+////      username = System.getenv("GITHUB_ACTOR")
+////      password = System.getenv("GITHUB_TOKEN")
+////    }
+//  }
   mavenCentral()
 }
 
@@ -83,6 +97,8 @@ dependencies {
   implementation(libs.junixsocketCommon)
   implementation(libs.bundles.jna)
 
+  testImplementation(libs.okhttpMockwebserver)
+  testImplementation(libs.okhttpMockwebserverJunit5)
   testImplementation(libs.okhttpLoggingInterceptor)
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.13.4")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.13.4")
