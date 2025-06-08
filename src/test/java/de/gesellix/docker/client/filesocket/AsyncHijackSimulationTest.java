@@ -1,14 +1,9 @@
 package de.gesellix.docker.client.filesocket;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +11,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,7 +44,7 @@ class AsyncHijackSimulationTest {
     serverSocket = new ServerSocket(0);
     port = serverSocket.getLocalPort();
 
-    // server loop
+    // accept one connection
     serverExecutor.submit(() -> {
       try (Socket sock = serverSocket.accept()) {
         handleConnection(sock);
@@ -63,19 +59,19 @@ class AsyncHijackSimulationTest {
   }
 
   private void handleConnection(Socket sock) throws IOException {
-    BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream(), StandardCharsets.UTF_8));
+    BufferedReader httpIn = new BufferedReader(new InputStreamReader(sock.getInputStream(), StandardCharsets.UTF_8));
     OutputStream out = sock.getOutputStream();
 
-    // 1) HTTP handshake
+    // --- 1) HTTP Upgrade handshake ---
     String line;
     boolean upgrade = false;
-    while (!(line = in.readLine()).isEmpty()) {
+    while (!(line = httpIn.readLine()).isEmpty()) {
       if (line.toLowerCase().startsWith("upgrade: tcp")) {
         upgrade = true;
       }
     }
     if (!upgrade) {
-      out.write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+      out.write("HTTP/1.1 400 Bad Request\r\nContent-Length:0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
       return;
     }
     out.write(("HTTP/1.1 101 Switching Protocols\r\n" +
@@ -84,57 +80,38 @@ class AsyncHijackSimulationTest {
         .getBytes(StandardCharsets.UTF_8));
     out.flush();
 
-    // 2) Asynchronous log broadcaster
-    ExecutorService logExecutor = Executors.newSingleThreadExecutor();
-    PipedOutputStream logPipeOut = new PipedOutputStream();
-    PipedInputStream logPipeIn = new PipedInputStream(logPipeOut);
+    // --- 2) Concurrent log broadcaster ---
+    ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
+    Runnable broadcast = new Runnable() {
+      private int i = 1;
 
-    logExecutor.submit(() -> {
-      try (BufferedWriter logWriter = new BufferedWriter(new OutputStreamWriter(logPipeOut, StandardCharsets.UTF_8))) {
-        for (int i = 1; i <= 10; i++) {
-          logWriter.write("INFO: regular update " + i + "\n");
-          logWriter.flush();
-          Thread.sleep(100);  // simulate delay
-          logWriter.write("ERROR: something went wrong at step " + i + "\n");
-          logWriter.flush();
-          Thread.sleep(100);
-        }
-      } catch (IOException | InterruptedException ignored) {
-      }
-    });
-
-    // 3) Merge client-input and log-feed onto the socket output
-    ExecutorService merger = Executors.newFixedThreadPool(2);
-    // Forward client input back to client (echo-like)
-    merger.submit(() -> {
-      try {
-        int b;
-        while ((b = sock.getInputStream().read()) != -1) {
-          out.write(b);
+      @Override
+      public void run() {
+        try {
+          // alternate INFO / ERROR
+          String msg = (i % 2 == 1)
+              ? "INFO: regular update " + ((i + 1) / 2) + "\n"
+              : "ERROR: something went wrong at step " + (i / 2) + "\n";
+          out.write(msg.getBytes(StandardCharsets.UTF_8));
           out.flush();
+          i++;
+          // stop after 20 lines
+          if (i > 20) logExec.shutdown();
+        } catch (IOException e) {
+          logExec.shutdown();  // socket closed
         }
-      } catch (IOException ignored) {
       }
-    });
-    // Forward log feed to client
-    merger.submit(() -> {
-      try {
-        int b;
-        while ((b = logPipeIn.read()) != -1) {
-          out.write(b);
-          out.flush();
-        }
-      } catch (IOException ignored) {
-      }
-    });
+    };
+    // schedule every 100ms
+    logExec.scheduleAtFixedRate(broadcast, 0, 100, TimeUnit.MILLISECONDS);
 
-    // wait until socket closes
+    // --- 3) Wait for socket close to exit ---
     try {
+      // just block until the client closes the socket
       sock.getInputStream().read();
     } catch (IOException ignored) {
     } finally {
-      logExecutor.shutdownNow();
-      merger.shutdownNow();
+      logExec.shutdownNow();
     }
   }
 
@@ -142,24 +119,22 @@ class AsyncHijackSimulationTest {
   void testAsyncHijackWithLogFiltering() throws Exception {
     Pattern errorPattern = Pattern.compile("^ERROR:.*step ([0-9]+)$");
     try (Socket client = new Socket("127.0.0.1", port)) {
-      InputStream is = client.getInputStream();
+      BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream(), StandardCharsets.UTF_8));
       OutputStream os = client.getOutputStream();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 
-      // 1) Perform HTTP upgrade handshake
+      // 1) Perform HTTP Upgrade
       os.write(("GET /containers/fake/hijack HTTP/1.1\r\n" +
           "Host: localhost\r\n" +
           "Connection: Upgrade\r\n" +
           "Upgrade: tcp\r\n\r\n")
           .getBytes(StandardCharsets.UTF_8));
       os.flush();
-      String statusLine = reader.readLine();
-      Assertions.assertTrue(statusLine.contains("101 Switching Protocols"));
-      // consume remaining headers
+      // read status + headers
+      Assertions.assertTrue(reader.readLine().contains("101 Switching Protocols"));
       while (!reader.readLine().isEmpty()) {
       }
 
-      // 2) Start a reader thread to filter ERROR lines
+      // 2) Start filtering thread
       BlockingQueue<String> errors = new LinkedBlockingQueue<>();
       Thread filterThread = new Thread(() -> {
         try {
@@ -167,7 +142,7 @@ class AsyncHijackSimulationTest {
           while ((ln = reader.readLine()) != null) {
             Matcher m = errorPattern.matcher(ln);
             if (m.matches()) {
-              errors.add(m.group(1)); // capture step number
+              errors.add(m.group(1));
             }
           }
         } catch (IOException ignored) {
@@ -175,17 +150,12 @@ class AsyncHijackSimulationTest {
       });
       filterThread.start();
 
-      // 3) Simulate client sending some commands
-      os.write("client: hello\n".getBytes(StandardCharsets.UTF_8));
-      os.flush();
-
-      // The client doesn't particularly care about INFO lines but just wants errors
-      // Wait for at least one ERROR capture
+      // 3) Let logs flow and wait for first ERROR
       String step = errors.poll(5, TimeUnit.SECONDS);
-      Assertions.assertNotNull(step, "Should receive at least one error line");
+      Assertions.assertNotNull(step, "Expected at least one ERROR log");
       System.out.println("Captured error at step " + step);
 
-      // 4) Close client side to end the interaction
+      // 4) Close client to terminate the server
       client.close();
       filterThread.join(1000);
     }
