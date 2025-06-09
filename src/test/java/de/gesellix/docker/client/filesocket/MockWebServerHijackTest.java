@@ -1,15 +1,10 @@
 package de.gesellix.docker.client.filesocket;
 
-import java.io.BufferedReader;
+import static okhttp3.internal.http.HttpStatusCodesKt.HTTP_SWITCHING_PROTOCOLS;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,95 +15,115 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketPolicy;
 import okhttp3.Call;
+import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.internal.http1.Streams;
 import okio.BufferedSink;
 import okio.BufferedSource;
-import okio.Okio;
 
 class MockWebServerHijackTest {
 
-  private ServerSocket passthrough;
-  private int port;
-  private Thread serverThread;
+  private MockWebServer mockServer;
 
   @BeforeEach
   void setup() throws IOException {
-    passthrough = new ServerSocket(0);
-    port = passthrough.getLocalPort();
-    System.out.println("[Test] Starting passthrough ServerSocket on port " + port);
-
-    serverThread = new Thread(() -> {
-      try (Socket socket = passthrough.accept()) {
-        System.out.println("[Server] Accepted connection");
-        InputStream rawIn = socket.getInputStream();
-        OutputStream rawOut = socket.getOutputStream();
-
-        // Read HTTP request headers until blank line
-        BufferedReader reader = new BufferedReader(new InputStreamReader(rawIn, StandardCharsets.UTF_8));
-        String line;
-        while (!(line = reader.readLine()).isEmpty()) {
-          System.out.println("[Server] Request line: " + line);
-        }
-
-        // Send 101 Switching Protocols response
-        String resp = "HTTP/1.1 101 Switching Protocols\nConnection: Upgrade\nUpgrade: tcp\n\n";
-        rawOut.write(resp.getBytes(StandardCharsets.UTF_8));
-        rawOut.flush();
-        System.out.println("[Server] Sent 101 response");
-
-        // Wrap okio streams for raw I/O
-        BufferedSource in = Okio.buffer(Okio.source(rawIn));
-        BufferedSink out = Okio.buffer(Okio.sink(rawOut));
-
-        // Start log broadcaster
-        ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
-        logExec.scheduleAtFixedRate(() -> {
-          try {
-            String msg = "ERROR: step test\n";
-            out.writeUtf8(msg).flush();
-            System.out.println("[Server] Sent log: " + msg.trim());
-          } catch (IOException e) {
-            System.out.println("[Server] logExec shutdown");
-            logExec.shutdown();
-          }
-        }, 0, 100, TimeUnit.MILLISECONDS);
-
-        // Echo client input
-        while ((line = in.readUtf8Line()) != null) {
-          System.out.println("[Server] Received client line: " + line);
-          String echo = "ECHO: " + line + "\n";
-          out.writeUtf8(echo).flush();
-          System.out.println("[Server] Echoed: " + echo.trim());
-        }
-
-        // cleanup
-        logExec.shutdownNow();
-        System.out.println("[Server] Connection closed");
-      } catch (IOException e) {
-        System.out.println("[Server] Echo thread ended due to error");
-        e.printStackTrace();
-      }
-    });
-    serverThread.start();
+    mockServer = new MockWebServer();
+    System.out.println("[Test] Starting MockWebServer");
   }
 
   @AfterEach
-  void teardown() throws IOException, InterruptedException {
-    System.out.println("[Test] Shutting down ServerSocket");
-    passthrough.close();
-    serverThread.join(1000);
+  void teardown() throws IOException {
+    System.out.println("[Test] Shutting down MockWebServer");
+    mockServer.shutdown();
   }
 
   @Test
-  void testTcpUpgradeWithPassthrough() throws Exception {
+  void testTcpUpgradeWithStreamHandler() throws Exception {
+    // Prepare a MockResponse with StreamHandler for TCP upgrade
+    System.out.println("[Test] Enqueueing upgrade response with streamHandler");
+    MockResponse upgrade = new MockResponse.Builder()
+        .code(HTTP_SWITCHING_PROTOCOLS)
+        .headers(Headers.of(
+            "Connection",
+            "upgrade",
+            "Upgrade",
+            "tcp",
+            "Content-Type",
+            "text/plain; charset=UTF-8"
+//            "Content-Type",
+//            "application/vnd.docker.raw-stream"
+        ))
+        // keep the TCP connection open and hand it to our streamHandler
+        .socketPolicy(SocketPolicy.KeepOpen.INSTANCE)
+        .streamHandler(stream -> {
+          System.out.println("[Server] streamHandler invoked");
+          BufferedSource in = stream.getRequestBody();
+          BufferedSink out = stream.getResponseBody();
+
+          // Start log broadcaster
+          ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
+          logExec.scheduleAtFixedRate(() -> {
+            try {
+              String msg = "ERROR: step test" + System.lineSeparator();
+              out.writeUtf8(msg);
+              out.flush();
+              System.out.println("[Server] Sent log: " + msg.trim());
+            } catch (IOException e) {
+              System.out.println("[Server] logExec shutdown");
+              logExec.shutdown();
+            }
+          }, 0, 100, TimeUnit.MILLISECONDS);
+
+          // Echo client input
+          CountDownLatch echoSeen = new CountDownLatch(1);
+          Executors.newSingleThreadExecutor().submit(() -> {
+            try {
+              String line;
+              while ((line = in.readUtf8Line()) != null) {
+                System.out.println("[Server] Received client line: " + line);
+                String echo = "ECHO: " + line + "\n";
+                out.writeUtf8(echo);
+                out.flush();
+                System.out.println("[Server] Echoed: " + echo.trim());
+                echoSeen.countDown();           // signal we saw it
+              }
+              System.out.println("[Server] Echo thread loop ended");
+            } catch (IOException e) {
+              System.out.println("[Server] Echo thread ended due to error");
+            }
+          });
+
+          // Keep open briefly then cancel
+          try {
+// keep logs going…
+            logExec.awaitTermination(2, TimeUnit.SECONDS);
+
+            System.out.println("[Server] Cancelling stream");
+// wait up to 2s for that echo
+            // Wait until we see an echo, or 2s, whichever comes first
+            echoSeen.await(2, TimeUnit.SECONDS);
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          } finally {
+            stream.cancel();
+          }
+        })
+        .build();
+
+    mockServer.enqueue(upgrade);
+    mockServer.start();
+    System.out.println("[Test] MockWebServer started at: " + mockServer.getPort());
+
     // Create client and perform upgrade
     OkHttpClient client = new OkHttpClient();
     Request request = new Request.Builder()
-        .url(new URL("http://localhost:" + port + "/containers/fake/hijack"))
+        .url(mockServer.url("/containers/fake/hijack"))
         .header("Connection", "Upgrade")
         .header("Upgrade", "tcp")
         .build();
@@ -137,7 +152,7 @@ class MockWebServerHijackTest {
           System.out.println("[Client] Received stream: " + line);
           received.add(line);
         }
-      } catch (IOException e) {
+      } catch (IOException ignored) {
         System.out.println("[Client] Reader thread ended");
       }
     });
@@ -158,5 +173,6 @@ class MockWebServerHijackTest {
 
     streams.cancel();
     System.out.println("[Client] Cancelled streams and shutting down");
+    mockServer.shutdown();
   }
 }
