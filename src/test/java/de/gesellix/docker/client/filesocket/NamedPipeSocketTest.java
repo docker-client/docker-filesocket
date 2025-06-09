@@ -136,7 +136,7 @@ class NamedPipeSocketTest {
 
   private Process createNamedPipeServer() throws InterruptedException, IOException {
     Process namedPipeServer;
-    String npipeImage = "gesellix/npipe:2024-12-22T12-25-00";
+    String npipeImage = "gesellix/npipe:2025-06-08T23-00-00";
     exec(5, TimeUnit.MINUTES, "docker", "pull", npipeImage);
     exec(1, TimeUnit.MINUTES, "docker", "create", "--name", "npipe", npipeImage);
     exec(1, TimeUnit.MINUTES, "docker", "cp", "npipe:/npipe.exe", "./npipe.exe");
