@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.SocketPolicy;
+import mockwebserver3.StreamHandler;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -47,7 +48,61 @@ class MockWebServerHijackTest {
   void testTcpUpgradeWithStreamHandler() throws Exception {
     // Prepare a MockResponse with StreamHandler for TCP upgrade
     System.out.println("[Test] Enqueueing upgrade response with streamHandler");
-    MockResponse upgrade = new MockResponse.Builder()
+    StreamHandler mockStreamHandler = stream -> {
+      System.out.println("[Server] streamHandler invoked");
+      BufferedSource in = stream.getRequestBody();
+      BufferedSink out = stream.getResponseBody();
+
+      // Start log broadcaster
+      ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
+      logExec.scheduleAtFixedRate(() -> {
+        try {
+          String msg = "ERROR: step test" + System.lineSeparator();
+          out.writeUtf8(msg);
+          out.flush();
+          System.out.println("[Server] Sent log: " + msg.trim());
+        } catch (IOException e) {
+          System.out.println("[Server] logExec shutdown");
+          logExec.shutdown();
+        }
+      }, 0, 100, TimeUnit.MILLISECONDS);
+
+      // Echo client input
+      CountDownLatch echoSeen = new CountDownLatch(1);
+      Executors.newSingleThreadExecutor().submit(() -> {
+        try {
+          String line;
+          while ((line = in.readUtf8Line()) != null) {
+            System.out.println("[Server] Received client line: " + line);
+            String echo = "ECHO: " + line + "\n";
+            out.writeUtf8(echo);
+            out.flush();
+            System.out.println("[Server] Echoed: " + echo.trim());
+            echoSeen.countDown();           // signal we saw it
+          }
+          System.out.println("[Server] Echo thread loop ended");
+        } catch (IOException e) {
+          System.out.println("[Server] Echo thread ended due to error");
+        }
+      });
+
+      // Keep open briefly then cancel
+      try {
+// keep logs going…
+        logExec.awaitTermination(2, TimeUnit.SECONDS);
+
+        System.out.println("[Server] Cancelling stream");
+// wait up to 2s for that echo
+        // Wait until we see an echo, or 2s, whichever comes first
+        echoSeen.await(2, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      } finally {
+        stream.cancel();
+      }
+    };
+
+    mockServer.enqueue(new MockResponse.Builder()
         .code(HTTP_SWITCHING_PROTOCOLS)
         .headers(Headers.of(
             "Connection",
@@ -61,62 +116,8 @@ class MockWebServerHijackTest {
         ))
         // keep the TCP connection open and hand it to our streamHandler
         .socketPolicy(SocketPolicy.KeepOpen.INSTANCE)
-        .streamHandler(stream -> {
-          System.out.println("[Server] streamHandler invoked");
-          BufferedSource in = stream.getRequestBody();
-          BufferedSink out = stream.getResponseBody();
-
-          // Start log broadcaster
-          ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
-          logExec.scheduleAtFixedRate(() -> {
-            try {
-              String msg = "ERROR: step test" + System.lineSeparator();
-              out.writeUtf8(msg);
-              out.flush();
-              System.out.println("[Server] Sent log: " + msg.trim());
-            } catch (IOException e) {
-              System.out.println("[Server] logExec shutdown");
-              logExec.shutdown();
-            }
-          }, 0, 100, TimeUnit.MILLISECONDS);
-
-          // Echo client input
-          CountDownLatch echoSeen = new CountDownLatch(1);
-          Executors.newSingleThreadExecutor().submit(() -> {
-            try {
-              String line;
-              while ((line = in.readUtf8Line()) != null) {
-                System.out.println("[Server] Received client line: " + line);
-                String echo = "ECHO: " + line + "\n";
-                out.writeUtf8(echo);
-                out.flush();
-                System.out.println("[Server] Echoed: " + echo.trim());
-                echoSeen.countDown();           // signal we saw it
-              }
-              System.out.println("[Server] Echo thread loop ended");
-            } catch (IOException e) {
-              System.out.println("[Server] Echo thread ended due to error");
-            }
-          });
-
-          // Keep open briefly then cancel
-          try {
-// keep logs going…
-            logExec.awaitTermination(2, TimeUnit.SECONDS);
-
-            System.out.println("[Server] Cancelling stream");
-// wait up to 2s for that echo
-            // Wait until we see an echo, or 2s, whichever comes first
-            echoSeen.await(2, TimeUnit.SECONDS);
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          } finally {
-            stream.cancel();
-          }
-        })
-        .build();
-
-    mockServer.enqueue(upgrade);
+        .streamHandler(mockStreamHandler)
+        .build());
     mockServer.start();
     System.out.println("[Test] MockWebServer started at: " + mockServer.getPort());
 
