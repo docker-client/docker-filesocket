@@ -10,48 +10,36 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
-import mockwebserver3.SocketPolicy;
-import mockwebserver3.StreamHandler;
+import mockwebserver3.SocketHandler;
+import mockwebserver3.junit5.StartStop;
 import okhttp3.Call;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.internal.http1.Streams;
 import okio.BufferedSink;
 import okio.BufferedSource;
+import okio.Okio;
+import okio.Socket;
 
 class MockWebServerHijackTest {
 
-  private MockWebServer mockServer;
-
-  @BeforeEach
-  void setup() throws IOException {
-    mockServer = new MockWebServer();
-    System.out.println("[Test] Starting MockWebServer");
-  }
-
-  @AfterEach
-  void teardown() throws IOException {
-    System.out.println("[Test] Shutting down MockWebServer");
-    mockServer.shutdown();
-  }
+  @StartStop
+  public final MockWebServer mockServer = new MockWebServer();
 
   @Test
   void testTcpUpgradeWithStreamHandler() throws Exception {
-    // Prepare a MockResponse with StreamHandler for TCP upgrade
-    System.out.println("[Test] Enqueueing upgrade response with streamHandler");
-    StreamHandler mockStreamHandler = stream -> {
-      System.out.println("[Server] streamHandler invoked");
-      BufferedSource in = stream.getRequestBody();
-      BufferedSink out = stream.getResponseBody();
+    // Prepare a MockResponse with SocketHandler for TCP upgrade
+    System.out.println("[Test] Enqueueing upgrade response with socketHandler");
+    SocketHandler mockSocketHandler = socket -> {
+      System.out.println("[Server] socketHandler invoked");
+      BufferedSource in = Okio.buffer(socket.getSource());
+      BufferedSink out = Okio.buffer(socket.getSink());
 
       // Start log broadcaster
       ScheduledExecutorService logExec = Executors.newSingleThreadScheduledExecutor();
@@ -98,7 +86,7 @@ class MockWebServerHijackTest {
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       } finally {
-        stream.cancel();
+        socket.cancel();
       }
     };
 
@@ -110,13 +98,12 @@ class MockWebServerHijackTest {
             "Upgrade",
             "tcp",
             "Content-Type",
-            "text/plain; charset=UTF-8"
-//            "Content-Type",
-//            "application/vnd.docker.raw-stream"
+//            "text/plain; charset=UTF-8"
+            "application/vnd.docker.raw-stream"
         ))
         // keep the TCP connection open and hand it to our streamHandler
-        .socketPolicy(SocketPolicy.KeepOpen.INSTANCE)
-        .streamHandler(mockStreamHandler)
+//        .socketPolicy(SocketPolicy.KeepOpen.INSTANCE)
+        .socketHandler(mockSocketHandler)
         .build());
     mockServer.start();
     System.out.println("[Test] MockWebServer started at: " + mockServer.getPort());
@@ -135,13 +122,13 @@ class MockWebServerHijackTest {
     System.out.println("[Client] Received response code: " + response.code());
     Assertions.assertEquals(101, response.code());
 
-    // Retrieve Streams via response.streams
-    Streams streams = response.streams();
-    Assertions.assertNotNull(streams, "Streams must be available after upgrade");
-    System.out.println("[Client] Obtained Streams");
+    // Retrieve Socket via response.socket
+    Socket socket = response.socket();
+    Assertions.assertNotNull(socket, "Socket must be available after upgrade");
+    System.out.println("[Client] Obtained Socket");
 
-    BufferedSource reader = streams.getSource();
-    BufferedSink writer = streams.getSink();
+    BufferedSource reader = Okio.buffer(socket.getSource());
+    BufferedSink writer = Okio.buffer(socket.getSink());
 
     BlockingQueue<String> received = new LinkedBlockingQueue<>();
 
@@ -172,8 +159,7 @@ class MockWebServerHijackTest {
     Assertions.assertTrue(err != null && err.startsWith("ERROR:"), "Expected error, got: " + err);
     Assertions.assertTrue(echo != null && echo.startsWith("ECHO:"), "Expected echo, got: " + echo);
 
-    streams.cancel();
+    socket.cancel();
     System.out.println("[Client] Cancelled streams and shutting down");
-    mockServer.shutdown();
   }
 }
