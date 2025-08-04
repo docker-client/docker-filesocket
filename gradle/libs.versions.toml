@@ -1,4 +1,5 @@
 [versions]
+jna = "5.17.0"
 junixsocket = "2.10.1"
 junixsocketVersionrange = "[2.4,3)"
 kotlin = "2.2.0"
@@ -13,7 +14,8 @@ slf4j = "2.0.17"
 slf4jVersionrange = "[1.7,3)"
 
 [libraries]
-junit4 = { module = "junit:junit", version = "4.13.2" }
+jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
+jnaPlatform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 junixsocketCore = { module = "com.kohlschutter.junixsocket:junixsocket-core", version.ref = "junixsocket" }
 junixsocketCommon = { module = "com.kohlschutter.junixsocket:junixsocket-common", version.ref = "junixsocket" }
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -28,5 +30,6 @@ slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 
 [bundles]
 kotlin = ["kotlin", "kotlinCommon", "kotlinJdk7", "kotlinJdk8"]
+jna = ["jna", "jnaPlatform"]
 junixsocket = ["junixsocketCore", "junixsocketCommon"]
 okio = ["okio", "okioJvm"]
