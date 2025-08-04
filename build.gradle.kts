@@ -104,6 +104,8 @@ java {
 
 tasks {
   withType<JavaCompile> {
+    // https://docs.gradle.org/current/userguide/toolchains.html#comparison_table_for_setting_project_toolchains
+//    options.release = 8
     options.encoding = "UTF-8"
   }
   withType<Test> {
@@ -198,4 +200,9 @@ nexusPublishing {
       }
     }
   }
+}
+
+tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
+  languageVersion = JavaLanguageVersion.of(21)
+  vendor = JvmVendorSpec.AMAZON
 }
