@@ -40,6 +40,16 @@ dependencies {
       }
     }
     listOf(
+      libs.bundles.jna
+    ).forEach {
+      implementation(it) {
+        version {
+          strictly(libs.versions.jnaVersionRange.get())
+          prefer(libs.versions.jna.get())
+        }
+      }
+    }
+    listOf(
       libs.bundles.junixsocket
     ).forEach {
       implementation(it) {
