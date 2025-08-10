@@ -16,8 +16,7 @@ public class UnixSocketFactorySupport {
     try {
       boolean isWindows = osName.toLowerCase().contains("windows");
       return !isWindows && AFUNIXSocket.isSupported();
-    }
-    catch (Throwable reason) {
+    } catch (Throwable reason) {
       log.info("Unix socket not supported", reason);
       return false;
     }

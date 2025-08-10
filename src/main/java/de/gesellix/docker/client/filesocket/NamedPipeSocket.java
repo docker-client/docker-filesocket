@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import com.sun.jna.platform.win32.WinNT;
 import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.Okio;
+import okio.Timeout;
 
 public class NamedPipeSocket extends FileSocket {
 
@@ -35,7 +37,7 @@ public class NamedPipeSocket extends FileSocket {
   private BufferedSource source;
   private BufferedSink sink;
 
-  private final int ioTimeoutMillis = 2000;
+  private final Timeout ioTimeout = new Timeout().timeout(2000, TimeUnit.MILLISECONDS);
 
   @Override
   public void connect(SocketAddress endpoint, int timeout) throws IOException {
@@ -71,8 +73,8 @@ public class NamedPipeSocket extends FileSocket {
     }
 
     connected = true;
-    source = Okio.buffer(new NamedPipeSource(handle, ioTimeoutMillis));
-    sink = Okio.buffer(new NamedPipeSink(handle, ioTimeoutMillis));
+    source = Okio.buffer(new NamedPipeSource(handle, ioTimeout));
+    sink = Okio.buffer(new NamedPipeSink(handle, ioTimeout));
   }
 
   @Override
