@@ -1,9 +1,9 @@
 package de.gesellix.docker.client.filesocket;
 
-import okio.ByteString;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import okio.ByteString;
 
 public class HostnameEncoder {
 

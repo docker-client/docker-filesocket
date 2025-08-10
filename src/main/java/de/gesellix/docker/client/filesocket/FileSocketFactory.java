@@ -1,22 +1,22 @@
 package de.gesellix.docker.client.filesocket;
 
-import okhttp3.Dns;
-
-import javax.net.SocketFactory;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
+import javax.net.SocketFactory;
+
+import okhttp3.Dns;
+
 public abstract class FileSocketFactory extends SocketFactory implements Dns {
 
   @Override
   public List<InetAddress> lookup(String hostname) throws UnknownHostException {
     if (hostname.endsWith(FileSocket.SOCKET_MARKER)) {
-      return Collections.singletonList(InetAddress.getByAddress(hostname, new byte[] {0, 0, 0, 0}));
-    }
-    else {
+      return Collections.singletonList(InetAddress.getByAddress(hostname, new byte[]{0, 0, 0, 0}));
+    } else {
       return Dns.SYSTEM.lookup(hostname);
     }
   }
