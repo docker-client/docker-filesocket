@@ -2,6 +2,9 @@ package de.gesellix.docker.client.filesocket;
 
 import static com.sun.jna.platform.win32.WinBase.INVALID_HANDLE_VALUE;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
@@ -10,6 +13,8 @@ import com.sun.jna.platform.win32.WinNT.HANDLE;
 import com.sun.jna.ptr.IntByReference;
 
 public final class NamedPipeUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(NamedPipeUtils.class);
 
   private NamedPipeUtils() {
   }
@@ -25,6 +30,12 @@ public final class NamedPipeUtils {
   public static boolean readOverlapped(WinNT.HANDLE handle, byte[] buf, IntByReference bytesRead, int timeoutMillis) {
     WinBase.OVERLAPPED overlapped = new WinBase.OVERLAPPED();
     overlapped.hEvent = Kernel32.INSTANCE.CreateEvent(null, true, false, null);
+
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException ignored) {
+      // ignored
+    }
 
     boolean ok = Kernel32.INSTANCE.ReadFile(handle, buf, buf.length, null, overlapped);
     if (!ok) {
@@ -44,12 +55,19 @@ public final class NamedPipeUtils {
 
     ExtendedKernel32.INSTANCE.GetOverlappedResult(handle, overlapped, bytesRead, false);
     Kernel32.INSTANCE.CloseHandle(overlapped.hEvent);
-    return bytesRead.getValue() > 0;
+    log.debug("Bytes read: {}", bytesRead.getValue());
+    return bytesRead.getValue() >= 0;
   }
 
   public static boolean writeOverlapped(WinNT.HANDLE handle, byte[] buf, int len, IntByReference bytesWritten, int timeoutMillis) {
     WinBase.OVERLAPPED overlapped = new WinBase.OVERLAPPED();
     overlapped.hEvent = Kernel32.INSTANCE.CreateEvent(null, true, false, null);
+
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException ignored) {
+      // ignored
+    }
 
     boolean ok = Kernel32.INSTANCE.WriteFile(handle, buf, len, null, overlapped);
     if (!ok) {
@@ -69,7 +87,11 @@ public final class NamedPipeUtils {
 
     ExtendedKernel32.INSTANCE.GetOverlappedResult(handle, overlapped, bytesWritten, false);
     Kernel32.INSTANCE.CloseHandle(overlapped.hEvent);
-    return bytesWritten.getValue() > 0;
+    log.debug("Bytes written: {}", bytesWritten.getValue());
+    if (bytesWritten.getValue() != len) {
+      log.warn("Incomplete write: {}/{}", bytesWritten.getValue(), len);
+    }
+    return bytesWritten.getValue() >= 0;
   }
 
   public static void closeHandle(HANDLE handle) {

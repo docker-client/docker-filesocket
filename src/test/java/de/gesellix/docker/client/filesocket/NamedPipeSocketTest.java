@@ -37,6 +37,14 @@ import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
 
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.LoggingEventListener;
+import okio.Timeout;
+
 class NamedPipeSocketTest {
 
   @Test
@@ -46,6 +54,111 @@ class NamedPipeSocketTest {
       namedPipeSocket.connect(new InetSocketAddress(
           getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[]{0, 0, 0, 0}),
           0));
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void canPingViaSocket() throws IOException {
+    try (NamedPipeSocket namedPipeSocket = new NamedPipeSocket()) {
+      namedPipeSocket.connect(new InetSocketAddress(
+          getByAddress(namedPipeSocket.encodeHostname("//./pipe/docker_engine"), new byte[]{0, 0, 0, 0}),
+          0));
+
+      OutputStream os = namedPipeSocket.getOutputStream();
+
+      List<String> headers = new ArrayList<>();
+      headers.add("GET /_ping HTTP/1.1");
+      headers.add("Content-Type: application/json");
+      headers.add("Accept: application/json");
+//      headers.add("Host: localhost");
+      headers.add("Host: 2f2f2e2f706970652f646f636b65725f656e67696e65.socket");
+      headers.add("Connection: Keep-Alive");
+      headers.add("Accept-Encoding: gzip");
+      headers.add("User-Agent: NamedPipeSocketTest");
+
+      try {
+        for (String line : headers) {
+          System.out.println(">>|" + line);
+          os.write(line.getBytes(StandardCharsets.UTF_8));
+          os.write("\n".getBytes(StandardCharsets.UTF_8));
+        }
+        os.write("\n".getBytes(StandardCharsets.UTF_8));
+        os.flush();
+        System.out.println("[TEST] Sent request headers");
+        Thread.sleep(2000);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      InputStream is = namedPipeSocket.getInputStream();
+      Thread readerThread = new Thread(() -> {
+        try {
+          byte[] buffer = new byte[8024];
+          int bytesRead;
+          while ((bytesRead = is.read(buffer)) != -1) {
+            System.out.println("Read: " + new String(buffer, 0, bytesRead, StandardCharsets.UTF_8));
+          }
+          Thread.sleep(500);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      });
+      readerThread.start();
+
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } finally {
+        os.close();
+      }
+      System.out.println("Closing reader");
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void canPingViaOkHttp() throws IOException {
+    NamedPipeSocketFactory namedPipeSocketFactory = new NamedPipeSocketFactory();
+    OkHttpClient.Builder builder = new OkHttpClient.Builder()
+        .socketFactory(namedPipeSocketFactory)
+        .dns(namedPipeSocketFactory)
+        .connectTimeout(new Timeout().timeout(10, TimeUnit.SECONDS).timeoutNanos() / 1000, TimeUnit.MILLISECONDS)
+        .callTimeout(new Timeout().timeout(30, TimeUnit.SECONDS).timeoutNanos() / 1000, TimeUnit.MILLISECONDS)
+        .readTimeout(new Timeout().timeout(30, TimeUnit.SECONDS).timeoutNanos() / 1000, TimeUnit.MILLISECONDS)
+        .writeTimeout(new Timeout().timeout(30, TimeUnit.SECONDS).timeoutNanos() / 1000, TimeUnit.MILLISECONDS)
+        .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+        .eventListenerFactory(new LoggingEventListener.Factory());
+
+    HttpUrl url = new HttpUrl.Builder()
+        .scheme("http")
+        .host(new NamedPipeSocket().encodeHostname("//./pipe/docker_engine"))
+        .addPathSegments("_ping")
+        .build();
+
+    Request request = new Request.Builder()
+        .get()
+        .url(url)
+        .addHeader("Content-Type", "application/json")
+        .addHeader("Accept", "application/json")
+        .build();
+
+    OkHttpClient client = builder.build();
+    Response response = client.newCall(request).execute();
+    if (!response.isSuccessful()) {
+      response.close();
+    } else {
+      String content = response.toString();
+      System.out.println("Got: " + content);
     }
   }
 
@@ -253,6 +366,7 @@ class NamedPipeSocketTest {
 
     Thread readerThread = new Thread(() -> {
       try (InputStream inputStream = namedPipeSocket.getInputStream()) {
+        Thread.sleep(1000);
         byte[] buf = new byte[1024];
         int read;
         while ((read = inputStream.read(buf)) != -1) {
