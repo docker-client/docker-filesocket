@@ -6,7 +6,6 @@ import static com.sun.jna.platform.win32.WinNT.GENERIC_READ;
 import static com.sun.jna.platform.win32.WinNT.GENERIC_WRITE;
 import static com.sun.jna.platform.win32.WinNT.OPEN_EXISTING;
 
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -55,7 +54,13 @@ public class NamedPipeSocket extends FileSocket {
     socketPath = socketPath.replace("/", "\\");
     log.debug("connect via '{}'...", socketPath);
 
-    Kernel32.INSTANCE.WaitNamedPipe(socketPath, 200);
+    boolean ok = Kernel32.INSTANCE.WaitNamedPipe(socketPath, 200);
+    if (!ok) {
+      int err = Kernel32.INSTANCE.GetLastError();
+      log.error("Failed to wait for Named Pipe '" + socketPath + "', WinError=" + err);
+      throw new IOException("Failed to wait for Named Pipe '" + socketPath + "', WinError=" + err);
+    }
+
     handle = Kernel32.INSTANCE.CreateFile(
         socketPath,
         GENERIC_READ | GENERIC_WRITE,
@@ -69,6 +74,7 @@ public class NamedPipeSocket extends FileSocket {
 
     if (INVALID_HANDLE_VALUE.equals(handle)) {
       int err = Kernel32.INSTANCE.GetLastError();
+      log.error("Failed to open Named Pipe '" + socketPath + "', WinError=" + err);
       throw new IOException("Failed to open Named Pipe '" + socketPath + "', WinError=" + err);
     }
 
@@ -86,15 +92,7 @@ public class NamedPipeSocket extends FileSocket {
   @Override
   public OutputStream getOutputStream() throws IOException {
     ensureOpen();
-
-    // Wrap the Okio OutputStream so flush() also flushes the BufferedSink
-    return new FilterOutputStream(sink.outputStream()) {
-      @Override
-      public void flush() throws IOException {
-        super.flush();       // flush Java's wrapper
-        sink.flush();        // flush Okio buffer to NamedPipeSink
-      }
-    };
+    return sink.outputStream();
   }
 
   @Override
@@ -102,6 +100,7 @@ public class NamedPipeSocket extends FileSocket {
     if (closed) {
       return;
     }
+    log.debug("closing handle {}...", handle);
     try {
       if (handle != null && !INVALID_HANDLE_VALUE.equals(handle)) {
         // Cancel any pending read/write before closing to avoid CloseHandle() hang
@@ -109,9 +108,11 @@ public class NamedPipeSocket extends FileSocket {
       }
 
       if (source != null) {
+        log.debug("closing source {}...", source);
         source.close();
       }
       if (sink != null) {
+        log.debug("closing sink {}...", sink);
         sink.close();
       }
     } finally {

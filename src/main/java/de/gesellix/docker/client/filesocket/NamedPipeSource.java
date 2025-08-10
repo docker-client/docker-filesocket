@@ -44,10 +44,10 @@ public class NamedPipeSource implements Source {
         // Expected when CancelIoEx() is called during close()
         return -1;
       }
-      return -1; // Other read error
+      return err == 0 ? 0 : -1; // Other read error
     }
 
-    if (bytesRead.getValue() <= 0) {
+    if (bytesRead.getValue() < 0) {
       return -1; // EOF
     }
 
