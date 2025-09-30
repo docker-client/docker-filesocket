@@ -1,5 +1,5 @@
 [versions]
-jna = "5.18.0"
+jna = "5.18.1"
 jnaVersionRange = "[5.0.0,)"
 junixsocket = "2.10.1"
 junixsocketVersionrange = "[2.4,3)"
