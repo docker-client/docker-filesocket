@@ -53,18 +53,6 @@ dependencies {
         prefer(libs.versions.okhttp.get())
       }
     }
-    api("de.gesellix.okhttp3-forked:okhttp") {
-      version {
-        strictly(libs.versions.okhttpVersionrange.get())
-        prefer(libs.versions.okhttp.get())
-      }
-    }
-    api("de.gesellix.okhttp3-forked:okhttp") {
-      version {
-        strictly(libs.versions.okhttpVersionrange.get())
-        prefer(libs.versions.okhttp.get())
-      }
-    }
     listOf(
       libs.bundles.jna
     ).forEach {
