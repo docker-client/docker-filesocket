@@ -24,6 +24,7 @@ jobs:
           - windows-latest
           # pinned to macos-13 due to https://github.com/actions/runner-images/issues/9254
           - macos-13
+          - macos-15-intel
         java:
           - '21'
     runs-on: ${{ matrix.os }}
