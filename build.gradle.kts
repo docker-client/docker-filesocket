@@ -98,6 +98,7 @@ dependencies {
   implementation(libs.bundles.jna)
 
   testImplementation(libs.okhttpMockwebserver)
+  testImplementation(libs.okhttpMockwebserverJunit5)
   testImplementation(libs.okhttpLoggingInterceptor)
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.13.4")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.13.4")
