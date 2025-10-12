@@ -18,7 +18,7 @@ public class NamedPipeSource implements Source {
 
   public NamedPipeSource(WinNT.HANDLE handle, Timeout timeout) {
     this.handle = handle;
-    this.timeoutMillis = (int) timeout.timeoutNanos() / 1000;
+    this.timeoutMillis = (int) (timeout.timeoutNanos() / 1_000_000);
   }
 
   @Override
@@ -47,7 +47,7 @@ public class NamedPipeSource implements Source {
       return err == 0 ? 0 : -1; // Other read error
     }
 
-    if (bytesRead.getValue() < 0) {
+    if (bytesRead.getValue() <= 0) {
       return -1; // EOF
     }
 
