@@ -1,10 +1,6 @@
 package de.gesellix.docker.client.filesocket;
 
 import static com.sun.jna.platform.win32.WinBase.INVALID_HANDLE_VALUE;
-import static com.sun.jna.platform.win32.WinNT.FILE_FLAG_OVERLAPPED;
-import static com.sun.jna.platform.win32.WinNT.GENERIC_READ;
-import static com.sun.jna.platform.win32.WinNT.GENERIC_WRITE;
-import static com.sun.jna.platform.win32.WinNT.OPEN_EXISTING;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinNT;
 
 import okio.BufferedSink;
@@ -36,7 +31,7 @@ public class NamedPipeSocket extends FileSocket {
   private BufferedSource source;
   private BufferedSink sink;
 
-  private final Timeout ioTimeout = new Timeout().timeout(2000, TimeUnit.MILLISECONDS);
+  private final Timeout ioTimeout = new Timeout().timeout(1000, TimeUnit.MILLISECONDS);
 
   @Override
   public void connect(SocketAddress endpoint, int timeout) throws IOException {
@@ -50,33 +45,11 @@ public class NamedPipeSocket extends FileSocket {
     connect(socketPath);
   }
 
-  void connect(String socketPath) throws IOException {
+  void connect(String socketPath) {
     socketPath = socketPath.replace("/", "\\");
     log.debug("connect via '{}'...", socketPath);
 
-    boolean ok = Kernel32.INSTANCE.WaitNamedPipe(socketPath, 200);
-    if (!ok) {
-      int err = Kernel32.INSTANCE.GetLastError();
-      log.error("Failed to wait for Named Pipe '" + socketPath + "', WinError=" + err);
-      throw new IOException("Failed to wait for Named Pipe '" + socketPath + "', WinError=" + err);
-    }
-
-    handle = Kernel32.INSTANCE.CreateFile(
-        socketPath,
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        null,
-        OPEN_EXISTING,
-        //0,
-        FILE_FLAG_OVERLAPPED,
-        null
-    );
-
-    if (INVALID_HANDLE_VALUE.equals(handle)) {
-      int err = Kernel32.INSTANCE.GetLastError();
-      log.error("Failed to open Named Pipe '" + socketPath + "', WinError=" + err);
-      throw new IOException("Failed to open Named Pipe '" + socketPath + "', WinError=" + err);
-    }
+    handle = NamedPipeUtils.connect(socketPath, 10_000, 500, 50);
 
     connected = true;
     source = Okio.buffer(new NamedPipeSource(handle, ioTimeout));
