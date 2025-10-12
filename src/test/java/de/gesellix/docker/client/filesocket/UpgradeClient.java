@@ -1,10 +1,12 @@
 package de.gesellix.docker.client.filesocket;
 
 import static de.gesellix.docker.client.filesocket.FileSocket.SOCKET_MARKER;
+import static java.net.InetAddress.getByAddress;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
@@ -24,7 +26,11 @@ public class UpgradeClient {
   public static void main(String[] args) throws Exception {
     String pipePath = "\\\\.\\pipe\\java_echo_test";
     NamedPipeSocket client = new NamedPipeSocket();
-    client.connect(pipePath);
+    client.connect(new InetSocketAddress(getByAddress(
+        client.encodeHostname(pipePath.replaceAll("\\\\", "/")), new byte[]{0, 0, 0, 0}),
+        0));
+//    client.connect(new InetSocketAddress(getByAddress(client.encodeHostname("//./pipe/docker_engine"), new byte[] {0, 0, 0, 0}), 0));
+//    client.connect(pipePath);
 
     OutputStream os = client.getOutputStream();
     os.write("line1\n".getBytes(StandardCharsets.UTF_8));
@@ -50,8 +56,8 @@ public class UpgradeClient {
     //        .port(port)
     //        .build();
 
-        NamedPipeSocketFactory socketFactory = new NamedPipeSocketFactory();
-        String socketAddress = "//./pipe/docker_engine";
+    NamedPipeSocketFactory socketFactory = new NamedPipeSocketFactory();
+    String socketAddress = "//./pipe/docker_engine";
 //    UnixSocketFactory socketFactory = new UnixSocketFactory();
 //    String socketAddress = "/var/run/docker.sock";
 
