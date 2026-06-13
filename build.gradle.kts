@@ -100,15 +100,15 @@ dependencies {
   testImplementation(libs.okhttpMockwebserver)
   testImplementation(libs.okhttpMockwebserverJunit5)
   testImplementation(libs.okhttpLoggingInterceptor)
-  testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.1.0")
-  testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.0")
+  testImplementation(libs.bundles.junit)
 }
 
 val dependencyVersions = listOf<String>(
 )
 
-val dependencyGroupVersions = mapOf<String, String>()
+val dependencyGroupVersions = mapOf(
+  "org.junit.jupiter" to libs.versions.junitJupiter.get(),
+)
 
 configurations.all {
   resolutionStrategy {
