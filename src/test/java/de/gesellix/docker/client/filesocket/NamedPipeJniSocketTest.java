@@ -437,7 +437,7 @@ class NamedPipeJniSocketTest {
 
   private Process createNamedPipeServer(String pipeName) throws InterruptedException, IOException {
     Process namedPipeServer;
-    String npipeImage = "gesellix/npipe:2025-07-27T22-12-00";
+    String npipeImage = "gesellix/npipe:2.0.0-202606131520";
     exec(5, TimeUnit.MINUTES, "docker", "pull", npipeImage);
     exec(1, TimeUnit.MINUTES, "docker", "create", "--name", "npipe", npipeImage);
     exec(1, TimeUnit.MINUTES, "docker", "cp", "npipe:/npipe.exe", "./npipe.exe");
